@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Adzuna Job Skills Roadmap with Listings</title>
+  <style>
+    body { font-family: Arial; padding: 20px; max-width: 700px; margin: auto; }
+    input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+    #output { margin-top: 20px; white-space: pre-wrap; background: #f0f0f0; padding: 15px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Career Roadmap Generator (Adzuna API)</h1>
+  <input id="career" placeholder="Enter career keyword (e.g., developer)" />
+  <button onclick="generateRoadmap()">Generate Roadmap</button>
+  <div id="output">Enter a career keyword and click Generate Roadmap.</div>
+
+  <script>
+    // TODO: Replace with your actual Adzuna app_id and api_key
+    /*const APP_ID = '121dda3c';
+    const API_KEY = '9a39ef009a22b73eecd92d7ae2a01b75';*/
+
+    async function fetchJobs(keyword) {
+      const url = `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${APP_ID}&app_key=${API_KEY}&results_per_page=10&what=${encodeURIComponent(keyword)}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Adzuna API error: ${response.status}`);
+      const data = await response.json();
+      return data.results;
+    }
+
+    function extractSkillsFromJobs(jobs) {
+      const skillCounts = {};
+      jobs.forEach(job => {
+        const text = (job.title + " " + job.description).toLowerCase();
+        const skills = ["javascript", "python", "sql", "aws", "react", "java", "docker", "linux", "node", "azure", "css", "html"];
+
+        skills.forEach(skill => {
+          if (text.includes(skill)) {
+            skillCounts[skill] = (skillCounts[skill] || 0) + 1;
+          }
+        });
+      });
+      return skillCounts;
+    }
+
+    function sortSkillsByCount(skillCounts) {
+      return Object.entries(skillCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([skill, count]) => ({ skill, count }));
+    }
+
+    async function generateRoadmap() {
+      const career = document.getElementById('career').value.trim();
+      if (!career) {
+        alert('Please enter a career keyword!');
+        return;
+      }
+
+      document.getElementById('output').innerText = '⏳ Fetching job listings from Adzuna...';
+
+      try {
+        const jobs = await fetchJobs(career);
+        if (jobs.length === 0) {
+          document.getElementById('output').innerText = 'No jobs found.';
+          return;
+        }
+
+        // Extract and sort skills
+        const skillCounts = extractSkillsFromJobs(jobs);
+        const sortedSkills = sortSkillsByCount(skillCounts);
+
+        // Build skill recommendations text
+        let roadmap = `📌 Skills recommended based on current job listings for "${career}":\n\n`;
+        if (sortedSkills.length === 0) {
+          roadmap += 'No matching skills found in job descriptions.\n\n';
+        } else {
+          sortedSkills.forEach(({ skill, count }, i) => {
+            roadmap += `${i + 1}. ${skill} (mentioned in ${count} job listings)\n`;
+          });
+          roadmap += '\n';
+        }
+
+        // Add job listings with titles, locations, and description snippets
+        roadmap += `📋 Job listings for "${career}":\n\n`;
+        jobs.forEach((job, i) => {
+          roadmap += `${i + 1}. ${job.title}\n`;
+          roadmap += `   Location: ${job.location.display_name}\n`;
+          roadmap += `   Description: ${job.description.substring(0, 200).replace(/\n/g, ' ')}...\n\n`;
+        });
+
+        document.getElementById('output').innerText = roadmap;
+
+      } catch (error) {
+        document.getElementById('output').innerText = `❌ Error: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>

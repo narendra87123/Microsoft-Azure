@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Career Path Explorer</title>
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+    /*    * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }*/
+:root {
+      /* Login Page Specific Theme */
+      --login-primary-color: #052a61; /* Vibrant Blue Accent */
+      --login-primary-dark-color: #0A58CA; /* Blue for hover */
+      
+      --login-background-gradient-start: #141E30; /* Deep Navy Blue */
+      --login-background-gradient-end: #243B55;   /* Dark Slate Blue / Charcoal */
+
+      /* General UI Variables */
+      --text-color-dark: #34495E;    /* Text color for inside the white form box */
+      --text-color-light: #5D6D7E;
+      --input-border-color: #DDE2E7;
+      --input-focus-border-color: var(--login-primary-color); /* Will use the new blue */
+      --input-focus-shadow-color: rgba(13, 110, 253, 0.25); /* CHANGED: Matching blue glow */
+      --button-text-color: #FFFFFF;
+      --container-bg-color: #FFFFFF; /* Form box remains white */
+      --error-color: #E74C3C;
+      --link-color: var(--login-primary-color); /* Links will also use the new blue */
+      --link-hover-color: var(--login-primary-dark-color);
+      --animated-icon-color: rgba(255, 255, 255, 0.18); /* Opacity for background icons on dark bg */
+
+      /* Spacing & Sizing */
+      --base-padding: 15px;
+      --base-margin: 10px;
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --border-radius-pill: 25px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background: linear-gradient(100deg, var(--login-background-gradient-start), var(--login-background-gradient-end));
+      color: var(--text-color-dark); 
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* Animated Background Styling */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .animated-bg span.icon-float {
+      position: absolute;
+      bottom: -50px; 
+      color: var(--animated-icon-color);
+      font-size: 20px; 
+      opacity: 0; 
+      animation: floatUpCareer 15s linear infinite;
+      user-select: none;
+    }
+
+    .icon-float.icon-lightbulb::before { content: "💡"; }
+    .icon-float.icon-gear::before { content: "⚙️"; }
+    .icon-float.icon-briefcase::before { content: "💼"; }
+    .icon-float.icon-arrow::before { content: "📈"; }
+    .icon-float.icon-cap::before { content: "🎓"; }
+    .icon-float.icon-speech::before { content: "💬"; }
+    .icon-float.icon-star::before { content: "⭐"; }
+    .icon-float.icon-network::before { content: "🌐"; }
+    .icon-float.icon-puzzle::before { content: "🧩"; }
+    .icon-float.icon-target::before { content: "🎯"; }
+    .icon-float.icon-pencil::before { content: "✏️"; }
+    .icon-float.icon-rocket::before { content: "🚀"; }
+
+
+    @keyframes floatUpCareer {
+      0% {
+        transform: translateY(0vh) translateX(0vw);
+        opacity: 0;
+      }
+      10%, 90% { 
+        opacity: 0.7; 
+      }
+      100% {
+        transform: translateY(-110vh) translateX(calc(var(--drift-x, 0) * 2vw)); 
+        opacity: 0;
+      }
+    }
+
+    .animated-bg span:nth-child(1) { left: 8%; animation-delay: 0s; font-size: 38px; --drift-x: -1.2; color: rgba(255,255,255,0.22);}
+    .animated-bg span:nth-child(2) { left: 18%; animation-delay: 2.5s; font-size: 30px; --drift-x: 1; animation-duration: 18s; }
+    .animated-bg span:nth-child(3) { left: 28%; animation-delay: 4s; font-size: 42px; --drift-x: -1.5; color: rgba(255,255,255,0.25);}
+    .animated-bg span:nth-child(4) { left: 38%; animation-delay: 1s; font-size: 32px; --drift-x: 0.5; animation-duration: 13s; }
+    .animated-bg span:nth-child(5) { left: 48%; animation-delay: 5s; font-size: 40px; --drift-x: -0.8; animation-duration: 20s; color: rgba(255,255,255,0.15);}
+    .animated-bg span:nth-child(6) { left: 58%; animation-delay: 3s; font-size: 30px; --drift-x: 1.2; animation-duration: 16s; }
+    .animated-bg span:nth-child(7) { left: 68%; animation-delay: 0.8s; font-size: 45px; --drift-x: -0.8; color: rgba(255,255,255,0.28);}
+    .animated-bg span:nth-child(8) { left: 78%; animation-delay: 4.5s; font-size: 28px; --drift-x: 0.8; animation-duration: 14s; }
+    .animated-bg span:nth-child(9) { left: 88%; animation-delay: 1.5s; font-size: 36px; --drift-x: -1.2; animation-duration: 19s; color: rgba(255,255,255,0.24);}
+    .animated-bg span:nth-child(10) { left: 3%; animation-delay: 3.5s; font-size: 35px; --drift-x: 1.1; animation-duration: 17s; }
+    .animated-bg span:nth-child(11) { left: 13%; animation-delay: 6s; font-size: 28px; --drift-x: -0.7; color: rgba(255,255,255,0.20);}
+    .animated-bg span:nth-child(12) { left: 83%; animation-delay: 2s; font-size: 38px; --drift-x: 0.7; animation-duration: 15s; }
+    .animated-bg span:nth-child(13) { left: 23%; animation-delay: 0.5s; font-size: 43px; --drift-x: 1.3; animation-duration: 22s; color: rgba(255,255,255,0.26);}
+    .animated-bg span:nth-child(14) { left: 33%; animation-delay: 5.5s; font-size: 26px; --drift-x: -0.9; animation-duration: 12s; }
+    .animated-bg span:nth-child(15) { left: 43%; animation-delay: 2.2s; font-size: 37px; --drift-x: 0.9; animation-duration: 17s; color: rgba(255,255,255,0.23);}
+    .animated-bg span:nth-child(16) { left: 53%; animation-delay: 6.5s; font-size: 33px; --drift-x: -1.1; animation-duration: 19s; }
+    .animated-bg span:nth-child(17) { left: 63%; animation-delay: 1.8s; font-size: 41px; --drift-x: 0.6; animation-duration: 14s; color: rgba(255,255,255,0.27);}
+    .animated-bg span:nth-child(18) { left: 73%; animation-delay: 4.2s; font-size: 29px; --drift-x: -0.6; animation-duration: 16s; }
+    .animated-bg span:nth-child(19) { left: 93%; animation-delay: 0.2s; font-size: 39px; --drift-x: 1.4; animation-duration: 21s; color: rgba(255,255,255,0.21);}
+    .animated-bg span:nth-child(20) { left: 50%; animation-delay: 7s; font-size: 34px; --drift-x: 0; animation-duration: 15s; }
+
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+             background: linear-gradient(to right, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        button{
+            margin-top: 30px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #5f7baf;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        button {
+             background: linear-gradient(to right, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .path-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #1e3c72;
+        }
+
+        .path-title {
+            font-size: 1.7em;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        .path-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .step {
+           background: linear-gradient(135deg, #2b5876, #4e4376);
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            border-color: #2b5876;
+            transform: translateY(-2px);
+        }
+
+        .step-number {
+            background: linear-gradient(to right, #cc9900, #b36b00);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: palegoldenrod;
+            margin-bottom: 5px;
+            font-size: 20px;
+        }
+
+        .step-duration {
+            color: powderblue;
+            font-size: 15px;
+        }
+
+        .resources {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #1e3c72;
+        }
+
+        .resources h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .resource-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+
+        }
+
+        .resource-item {
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #514480;
+        }
+
+        .resource-title {
+            font-weight: 600;
+            color: palegoldenrod;
+            margin-bottom: 5px;
+            font-size: 20px;
+        }
+
+        .resource-type {
+            color: paleturquoise;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .algorithm-info {
+           background: linear-gradient(135deg, #2b5876, #4e4376);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .input-section {
+                flex-direction: column;
+            }
+            
+            .path-steps {
+                flex-direction: column;
+            }
+            
+            .step {
+                min-width: auto;
+            }
+        }
+         .back-button {
+
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            padding-left:25px;
+            display: inline;
+            width: 250px;
+           /* border: none;
+            padding-right: 0;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            margin-left: 40px;
+            padding-left: 15px;*/
+            
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(4, 2, 116, 0.3);
+        }
+
+        .Btn1 {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+ /* background: linear-gradient(-50deg,rgb(39, 107, 255),rgb(112, 186, 255),rgb(39, 107, 255));*/
+ background: linear-gradient(135deg, #2b5876, #4e4376);
+  background-size: 250%;
+  background-position: left;
+  display: inline;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition-duration: .5s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.11);
+  margin-left: 650px;
+}
+
+.logoIcon {
+    font-size: 20px;
+}
+
+.tooltip {
+  position: absolute;
+  top: -20px;
+  opacity: 0;
+  background: linear-gradient(to right, #1e3c72, #2a5298);
+  color: white;
+  padding: 10px 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition-duration: .2s;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  font-size: 20px;
+  margin-left: -37px;
+  margin-top: -20px;
+}
+
+.tooltip::before {
+  position: absolute;
+  content: "";
+  width: 10px;
+  height: 10px;
+   background: linear-gradient(to right, #1e3c72, #2a5298);
+  background-size: 1000%;
+  background-position: center;
+  transform: rotate(45deg);
+  bottom: -15%;
+  transition-duration: .3s;
+}
+
+.Btn1:hover .tooltip {
+  top: -50px;
+  opacity: 1;
+  transition-duration: .3s;
+}
+
+.Btn1:hover {
+  background-position: right;
+  transition-duration: .5s;
+}
+.Btn2 {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+ /* background: linear-gradient(-50deg,rgb(39, 107, 255),rgb(112, 186, 255),rgb(39, 107, 255));*/
+background: linear-gradient(135deg, #2b5876, #4e4376);
+  background-size: 250%;
+  background-position: left;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition-duration: .5s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.11);
+  margin-left: 1010px;
+  margin-top: -60px;
+  margin-bottom: 40px;
+}
+.tooltip2 {
+  position: absolute;
+  top: -20px;
+  opacity: 0;
+  background: linear-gradient(135deg, #2b5876, #4e4376);
+  color: white;
+  padding: 10px 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition-duration: .2s;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  font-size: 20px;
+  margin-left: -25px;
+  margin-top: -20px;
+}
+
+.tooltip2::before {
+  position: absolute;
+  content: "";
+  width: 10px;
+  height: 10px;
+ background: linear-gradient(135deg, #2b5876, #4e4376);
+  background-size: 1000%;
+  background-position: center;
+  transform: rotate(45deg);
+  bottom: -15%;
+  transition-duration: .3s;
+}
+
+.Btn2:hover .tooltip2 {
+  top: -50px;
+  opacity: 1;
+  transition-duration: .3s;
+}
+
+.Btn2:hover {
+  background-position: right;
+  transition-duration: .5s;
+}
+    </style>
+</head>
+<body>
+    <div class="animated-bg">
+    <span class="icon-float icon-lightbulb"></span>
+    <span class="icon-float icon-gear"></span>
+    <span class="icon-float icon-briefcase"></span>
+    <span class="icon-float icon-arrow"></span>
+    <span class="icon-float icon-cap"></span>
+    <span class="icon-float icon-speech"></span>
+    <span class="icon-float icon-star"></span>
+    <span class="icon-float icon-network"></span>
+    <span class="icon-float icon-puzzle"></span>
+    <span class="icon-float icon-target"></span>
+    <span class="icon-float icon-pencil"></span>
+    <span class="icon-float icon-rocket"></span>
+    <span class="icon-float icon-lightbulb"></span> 
+    <span class="icon-float icon-gear"></span>
+    <span class="icon-float icon-cap"></span>
+    <span class="icon-float icon-briefcase"></span>
+    <span class="icon-float icon-star"></span>
+    <span class="icon-float icon-puzzle"></span>
+    <span class="icon-float icon-arrow"></span>
+    <span class="icon-float icon-target"></span>
+  </div>
+    <div class="container">
+        <h1>🚀 Career Path Explorer</h1>
+         <button class="back-button" onclick="window.location.href='profile.html'">← Back to Profile</button>
+    
+        <button class="Btn1" onclick="window.location.href='openlibrary.html'">
+   <span class="logoIcon">📚</span>
+   <span class="tooltip">Resources</span>
+</button>
+<button class="Btn2" onclick="window.location.href='mentor.html'">
+   <span class="logoIcon">🧑🏻</span>
+   <span class="tooltip2">Mentor</span>
+</button>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="currentLevel">Current Level:</label>
+                <select id="currentLevel">
+                    <option value="">Select your current level</option>
+                    <option value="complete-beginner">Complete Beginner (No Tech Experience)</option>
+                    <option value="student">Student (Any Field)</option>
+                    <option value="non-tech-professional">Non-Tech Professional</option>
+                    <option value="basic-programming">Basic Programming Knowledge</option>
+                    <option value="basic-math">Strong Math Background</option>
+                    <option value="basic-design">Basic Design Skills</option>
+                    <option value="business-background">Business/Management Background</option>
+                    <option value="science-background">Science/Engineering Background</option>
+                    <option value="marketing-background">Marketing/Sales Background</option>
+                    <option value="basic-web-dev">Basic Web Development</option>
+                    <option value="intermediate-programming">Intermediate Programming</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="targetRole">Target Role:</label>
+                <select id="targetRole">
+                    <option value="">Select your target role</option>
+                    <optgroup label="Software Development">
+                        <option value="frontend-developer">Frontend Developer</option>
+                        <option value="backend-developer">Backend Developer</option>
+                        <option value="fullstack-developer">Full Stack Developer</option>
+                        <option value="mobile-developer">Mobile App Developer</option>
+                        <option value="game-developer">Game Developer</option>
+                        <option value="software-engineer">Software Engineer</option>
+                    </optgroup>
+                    <optgroup label="Data & AI">
+                        <option value="data-scientist">Data Scientist</option>
+                        <option value="data-analyst">Data Analyst</option>
+                        <option value="ml-engineer">Machine Learning Engineer</option>
+                        <option value="ai-researcher">AI Researcher</option>
+                        <option value="data-engineer">Data Engineer</option>
+                    </optgroup>
+                    <optgroup label="Cybersecurity">
+                        <option value="cybersecurity-analyst">Cybersecurity Analyst</option>
+                        <option value="ethical-hacker">Ethical Hacker</option>
+                        <option value="security-architect">Security Architect</option>
+                    </optgroup>
+                    <optgroup label="Cloud & DevOps">
+                        <option value="cloud-architect">Cloud Architect</option>
+                        <option value="devops-engineer">DevOps Engineer</option>
+                        <option value="system-admin">System Administrator</option>
+                    </optgroup>
+                    <optgroup label="Design & UX">
+                        <option value="ui-ux-designer">UI/UX Designer</option>
+                        <option value="product-designer">Product Designer</option>
+                        <option value="graphic-designer">Graphic Designer</option>
+                    </optgroup>
+                    <optgroup label="Management & Business">
+                        <option value="product-manager">Product Manager</option>
+                        <option value="tech-lead">Technical Lead</option>
+                        <option value="project-manager">Project Manager</option>
+                        <option value="business-analyst">Business Analyst</option>
+                    </optgroup>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <button onclick="findCareerPath()">Find My Path</button>
+            </div>
+        </div>
+
+        <div class="results-section" id="results"></div>
+    </div>
+
+    <script>
+        // Graph data structure representing career paths
+        class CareerGraph {
+            constructor() {
+                this.nodes = new Map();
+                this.edges = new Map();
+                this.initializeGraph();
+            }
+
+            // Initialize the career graph with nodes and edges
+            initializeGraph() {
+                // Define comprehensive career nodes
+                const nodes = [
+                    // Starting Points
+                    { id: 'complete-beginner', title: 'Complete Beginner', level: 0 },
+                    { id: 'student', title: 'Student (Any Field)', level: 0 },
+                    { id: 'non-tech-professional', title: 'Non-Tech Professional', level: 0 },
+                    { id: 'basic-programming', title: 'Basic Programming', level: 1 },
+                    { id: 'basic-math', title: 'Strong Math Background', level: 1 },
+                    { id: 'basic-design', title: 'Basic Design Skills', level: 1 },
+                    { id: 'business-background', title: 'Business Background', level: 1 },
+                    { id: 'science-background', title: 'Science/Engineering Background', level: 1 },
+                    { id: 'marketing-background', title: 'Marketing Background', level: 1 },
+                    { id: 'basic-web-dev', title: 'Basic Web Development', level: 2 },
+                    { id: 'intermediate-programming', title: 'Intermediate Programming', level: 2 },
+                    
+                    // Foundational Skills
+                    { id: 'programming-fundamentals', title: 'Programming Fundamentals', level: 2 },
+                    { id: 'data-fundamentals', title: 'Data Analysis Fundamentals', level: 2 },
+                    { id: 'design-fundamentals', title: 'Design Fundamentals', level: 2 },
+                    { id: 'business-analysis-basics', title: 'Business Analysis Basics', level: 2 },
+                    { id: 'networking-basics', title: 'Networking & Security Basics', level: 2 },
+                    { id: 'database-basics', title: 'Database Fundamentals', level: 2 },
+                    
+                    // Intermediate Skills
+                    { id: 'advanced-programming', title: 'Advanced Programming', level: 3 },
+                    { id: 'web-development', title: 'Web Development', level: 3 },
+                    { id: 'mobile-development', title: 'Mobile Development', level: 3 },
+                    { id: 'data-science-basics', title: 'Data Science Basics', level: 3 },
+                    { id: 'machine-learning-basics', title: 'Machine Learning Basics', level: 3 },
+                    { id: 'ux-design-intermediate', title: 'UX Design Intermediate', level: 3 },
+                    { id: 'cybersecurity-intermediate', title: 'Cybersecurity Intermediate', level: 3 },
+                    { id: 'cloud-basics', title: 'Cloud Computing Basics', level: 3 },
+                    { id: 'product-management-basics', title: 'Product Management Basics', level: 3 },
+                    { id: 'devops-basics', title: 'DevOps Basics', level: 3 },
+                    
+                    // Advanced Skills
+                    { id: 'frontend-advanced', title: 'Advanced Frontend', level: 4 },
+                    { id: 'backend-advanced', title: 'Advanced Backend', level: 4 },
+                    { id: 'mobile-advanced', title: 'Advanced Mobile', level: 4 },
+                    { id: 'data-science-advanced', title: 'Advanced Data Science', level: 4 },
+                    { id: 'ml-advanced', title: 'Advanced Machine Learning', level: 4 },
+                    { id: 'security-advanced', title: 'Advanced Security', level: 4 },
+                    { id: 'cloud-advanced', title: 'Advanced Cloud', level: 4 },
+                    { id: 'design-advanced', title: 'Advanced Design', level: 4 },
+                    
+                    // Career Targets
+                    { id: 'frontend-developer', title: 'Frontend Developer', level: 5 },
+                    { id: 'backend-developer', title: 'Backend Developer', level: 5 },
+                    { id: 'fullstack-developer', title: 'Full Stack Developer', level: 5 },
+                    { id: 'mobile-developer', title: 'Mobile App Developer', level: 5 },
+                    { id: 'game-developer', title: 'Game Developer', level: 5 },
+                    { id: 'software-engineer', title: 'Software Engineer', level: 5 },
+                    { id: 'data-scientist', title: 'Data Scientist', level: 5 },
+                    { id: 'data-analyst', title: 'Data Analyst', level: 5 },
+                    { id: 'ml-engineer', title: 'Machine Learning Engineer', level: 5 },
+                    { id: 'ai-researcher', title: 'AI Researcher', level: 6 },
+                    { id: 'data-engineer', title: 'Data Engineer', level: 5 },
+                    { id: 'cybersecurity-analyst', title: 'Cybersecurity Analyst', level: 5 },
+                    { id: 'ethical-hacker', title: 'Ethical Hacker', level: 5 },
+                    { id: 'security-architect', title: 'Security Architect', level: 6 },
+                    { id: 'cloud-architect', title: 'Cloud Architect', level: 6 },
+                    { id: 'devops-engineer', title: 'DevOps Engineer', level: 5 },
+                    { id: 'system-admin', title: 'System Administrator', level: 5 },
+                    { id: 'ui-ux-designer', title: 'UI/UX Designer', level: 5 },
+                    { id: 'product-designer', title: 'Product Designer', level: 5 },
+                    { id: 'graphic-designer', title: 'Graphic Designer', level: 4 },
+                    { id: 'product-manager', title: 'Product Manager', level: 5 },
+                    { id: 'tech-lead', title: 'Technical Lead', level: 6 },
+                    { id: 'project-manager', title: 'Project Manager', level: 5 },
+                    { id: 'business-analyst', title: 'Business Analyst', level: 5 }
+                ];
+
+                // Add nodes to the graph
+                nodes.forEach(node => {
+                    this.nodes.set(node.id, node);
+                    this.edges.set(node.id, []);
+                });
+
+                // Define comprehensive learning paths with time weights (weeks)
+                
+                // From starting points to fundamentals
+                this.addEdge('complete-beginner', 'programming-fundamentals', 8);
+                this.addEdge('complete-beginner', 'data-fundamentals', 6);
+                this.addEdge('complete-beginner', 'design-fundamentals', 4);
+                this.addEdge('complete-beginner', 'business-analysis-basics', 4);
+                
+                this.addEdge('student', 'programming-fundamentals', 6);
+                this.addEdge('student', 'data-fundamentals', 4);
+                this.addEdge('student', 'design-fundamentals', 3);
+                this.addEdge('student', 'business-analysis-basics', 3);
+                
+                this.addEdge('non-tech-professional', 'programming-fundamentals', 10);
+                this.addEdge('non-tech-professional', 'business-analysis-basics', 2);
+                this.addEdge('non-tech-professional', 'product-management-basics', 3);
+                
+                this.addEdge('basic-programming', 'advanced-programming', 6);
+                this.addEdge('basic-programming', 'web-development', 4);
+                this.addEdge('basic-programming', 'data-science-basics', 5);
+                
+                this.addEdge('basic-math', 'data-science-basics', 4);
+                this.addEdge('basic-math', 'machine-learning-basics', 5);
+                this.addEdge('basic-math', 'programming-fundamentals', 6);
+                
+                this.addEdge('basic-design', 'design-fundamentals', 2);
+                this.addEdge('basic-design', 'ux-design-intermediate', 4);
+                this.addEdge('basic-design', 'graphic-designer', 8);
+                
+                this.addEdge('business-background', 'business-analysis-basics', 2);
+                this.addEdge('business-background', 'product-management-basics', 3);
+                this.addEdge('business-background', 'data-fundamentals', 4);
+                
+                this.addEdge('science-background', 'programming-fundamentals', 4);
+                this.addEdge('science-background', 'data-science-basics', 3);
+                this.addEdge('science-background', 'machine-learning-basics', 4);
+                
+                this.addEdge('marketing-background', 'data-fundamentals', 3);
+                this.addEdge('marketing-background', 'business-analysis-basics', 2);
+                this.addEdge('marketing-background', 'design-fundamentals', 3);
+                
+                this.addEdge('basic-web-dev', 'web-development', 2);
+                this.addEdge('basic-web-dev', 'frontend-advanced', 4);
+                
+                this.addEdge('intermediate-programming', 'advanced-programming', 4);
+                this.addEdge('intermediate-programming', 'web-development', 3);
+                this.addEdge('intermediate-programming', 'mobile-development', 4);
+                
+                // From fundamentals to intermediate
+                this.addEdge('programming-fundamentals', 'advanced-programming', 6);
+                this.addEdge('programming-fundamentals', 'web-development', 4);
+                this.addEdge('programming-fundamentals', 'mobile-development', 6);
+                this.addEdge('programming-fundamentals', 'data-science-basics', 4);
+                this.addEdge('programming-fundamentals', 'cybersecurity-intermediate', 5);
+                this.addEdge('programming-fundamentals', 'devops-basics', 5);
+                
+                this.addEdge('data-fundamentals', 'data-science-basics', 4);
+                this.addEdge('data-fundamentals', 'business-analysis-basics', 2);
+                
+                this.addEdge('design-fundamentals', 'ux-design-intermediate', 4);
+                this.addEdge('design-fundamentals', 'graphic-designer', 6);
+                
+                this.addEdge('business-analysis-basics', 'product-management-basics', 3);
+                this.addEdge('business-analysis-basics', 'business-analyst', 6);
+                
+                this.addEdge('networking-basics', 'cybersecurity-intermediate', 4);
+                this.addEdge('networking-basics', 'system-admin', 6);
+                
+                this.addEdge('database-basics', 'data-science-basics', 3);
+                this.addEdge('database-basics', 'backend-advanced', 4);
+                
+                // From intermediate to advanced
+                this.addEdge('advanced-programming', 'frontend-advanced', 4);
+                this.addEdge('advanced-programming', 'backend-advanced', 4);
+                this.addEdge('advanced-programming', 'mobile-advanced', 4);
+                
+                this.addEdge('web-development', 'frontend-advanced', 3);
+                this.addEdge('web-development', 'backend-advanced', 4);
+                
+                this.addEdge('mobile-development', 'mobile-advanced', 3);
+                
+                this.addEdge('data-science-basics', 'data-science-advanced', 6);
+                this.addEdge('data-science-basics', 'machine-learning-basics', 4);
+                
+                this.addEdge('machine-learning-basics', 'ml-advanced', 8);
+                
+                this.addEdge('cybersecurity-intermediate', 'security-advanced', 6);
+                
+                this.addEdge('cloud-basics', 'cloud-advanced', 6);
+                
+                this.addEdge('ux-design-intermediate', 'design-advanced', 4);
+                
+                this.addEdge('devops-basics', 'cloud-basics', 3);
+                this.addEdge('devops-basics', 'devops-engineer', 6);
+                
+                // From advanced to career targets
+                this.addEdge('frontend-advanced', 'frontend-developer', 4);
+                this.addEdge('backend-advanced', 'backend-developer', 4);
+                this.addEdge('frontend-advanced', 'fullstack-developer', 6);
+                this.addEdge('backend-advanced', 'fullstack-developer', 4);
+                this.addEdge('mobile-advanced', 'mobile-developer', 3);
+                this.addEdge('advanced-programming', 'game-developer', 8);
+                this.addEdge('advanced-programming', 'software-engineer', 4);
+                
+                this.addEdge('data-science-advanced', 'data-scientist', 4);
+                this.addEdge('data-science-basics', 'data-analyst', 4);
+                this.addEdge('ml-advanced', 'ml-engineer', 4);
+                this.addEdge('ml-advanced', 'ai-researcher', 8);
+                this.addEdge('data-science-advanced', 'data-engineer', 3);
+                
+                this.addEdge('security-advanced', 'cybersecurity-analyst', 3);
+                this.addEdge('security-advanced', 'ethical-hacker', 4);
+                this.addEdge('security-advanced', 'security-architect', 6);
+                
+                this.addEdge('cloud-advanced', 'cloud-architect', 4);
+                this.addEdge('cloud-basics', 'system-admin', 4);
+                
+                this.addEdge('design-advanced', 'ui-ux-designer', 3);
+                this.addEdge('design-advanced', 'product-designer', 4);
+                
+                this.addEdge('product-management-basics', 'product-manager', 6);
+                this.addEdge('product-management-basics', 'project-manager', 5);
+                
+                this.addEdge('software-engineer', 'tech-lead', 12);
+                this.addEdge('frontend-developer', 'tech-lead', 16);
+                this.addEdge('backend-developer', 'tech-lead', 14);
+            }
+
+            addEdge(from, to, weight) {
+                if (!this.edges.has(from)) {
+                    this.edges.set(from, []);
+                }
+                this.edges.get(from).push({ node: to, weight });
+            }
+
+            // Dijkstra's algorithm to find shortest path
+            findShortestPath(start, end) {
+                const distances = new Map();
+                const previous = new Map();
+                const visited = new Set();
+                const queue = new PriorityQueue();
+
+                // Initialize distances
+                for (let node of this.nodes.keys()) {
+                    distances.set(node, node === start ? 0 : Infinity);
+                    previous.set(node, null);
+                }
+
+                queue.enqueue(start, 0);
+
+                while (!queue.isEmpty()) {
+                    const current = queue.dequeue();
+                    
+                    if (visited.has(current)) continue;
+                    visited.add(current);
+
+                    if (current === end) break;
+
+                    const neighbors = this.edges.get(current) || [];
+                    for (let neighbor of neighbors) {
+                        const newDistance = distances.get(current) + neighbor.weight;
+                        
+                        if (newDistance < distances.get(neighbor.node)) {
+                            distances.set(neighbor.node, newDistance);
+                            previous.set(neighbor.node, current);
+                            queue.enqueue(neighbor.node, newDistance);
+                        }
+                    }
+                }
+
+                // Reconstruct path
+                const path = [];
+                let current = end;
+                while (current !== null) {
+                    path.unshift(current);
+                    current = previous.get(current);
+                }
+
+                return {
+                    path: path,
+                    totalTime: distances.get(end),
+                    exists: distances.get(end) !== Infinity
+                };
+            }
+
+            // BFS to find all possible paths
+            findAllPaths(start, end, maxDepth = 10) {
+                const paths = [];
+                const queue = [{ path: [start], visited: new Set([start]) }];
+
+                while (queue.length > 0) {
+                    const { path, visited } = queue.shift();
+                    const current = path[path.length - 1];
+
+                    if (current === end) {
+                        paths.push([...path]);
+                        continue;
+                    }
+
+                    if (path.length >= maxDepth) continue;
+
+                    const neighbors = this.edges.get(current) || [];
+                    for (let neighbor of neighbors) {
+                        if (!visited.has(neighbor.node)) {
+                            const newVisited = new Set(visited);
+                            newVisited.add(neighbor.node);
+                            queue.push({
+                                path: [...path, neighbor.node],
+                                visited: newVisited
+                            });
+                        }
+                    }
+                }
+
+                return paths;
+            }
+        }
+
+        // Priority Queue implementation for Dijkstra's algorithm
+        class PriorityQueue {
+            constructor() {
+                this.items = [];
+            }
+
+            enqueue(element, priority) {
+                this.items.push({ element, priority });
+                this.items.sort((a, b) => a.priority - b.priority);
+            }
+
+            dequeue() {
+                return this.items.shift()?.element;
+            }
+
+            isEmpty() {
+                return this.items.length === 0;
+            }
+        }
+
+        // Learning resources database for diverse career paths
+        const learningResources = {
+            'complete-beginner': [
+                { title: 'Computer Science Basics', type: 'Course', platform: 'Khan Academy' },
+                { title: 'Introduction to Technology', type: 'Course', platform: 'Coursera' },
+                { title: 'Digital Literacy Fundamentals', type: 'Tutorial', platform: 'edX' }
+            ],
+            'programming-fundamentals': [
+                { title: 'Python for Everybody', type: 'Course', platform: 'Coursera' },
+                { title: 'CS50 Introduction to Computer Science', type: 'Course', platform: 'Harvard/edX' },
+                { title: 'Automate the Boring Stuff with Python', type: 'Book', platform: 'Online' }
+            ],
+            'data-fundamentals': [
+                { title: 'Data Analysis with Python', type: 'Course', platform: 'freeCodeCamp' },
+                { title: 'Statistics Fundamentals', type: 'Course', platform: 'Khan Academy' },
+                { title: 'Excel for Data Analysis', type: 'Tutorial', platform: 'Microsoft Learn' }
+            ],
+            'data-science-basics': [
+                { title: 'Data Science with R', type: 'Course', platform: 'Johns Hopkins/Coursera' },
+                { title: 'Python Data Science Handbook', type: 'Book', platform: 'O\'Reilly' },
+                { title: 'Kaggle Learn Data Science', type: 'Interactive', platform: 'Kaggle' }
+            ],
+            'machine-learning-basics': [
+                { title: 'Andrew Ng\'s Machine Learning', type: 'Course', platform: 'Coursera' },
+                { title: 'Fast.ai Practical Deep Learning', type: 'Course', platform: 'fast.ai' },
+                { title: 'Hands-On Machine Learning', type: 'Book', platform: 'O\'Reilly' }
+            ],
+            'cybersecurity-intermediate': [
+                { title: 'Cybersecurity Fundamentals', type: 'Course', platform: 'IBM/Coursera' },
+                { title: 'Ethical Hacking Course', type: 'Course', platform: 'Udemy' },
+                { title: 'CISSP Study Guide', type: 'Book', platform: 'Sybex' }
+            ],
+            'design-fundamentals': [
+                { title: 'Design Thinking', type: 'Course', platform: 'IDEO/Coursera' },
+                { title: 'Adobe Creative Suite Tutorials', type: 'Tutorial', platform: 'Adobe' },
+                { title: 'The Design of Everyday Things', type: 'Book', platform: 'Don Norman' }
+            ],
+            'ux-design-intermediate': [
+                { title: 'Google UX Design Certificate', type: 'Certificate', platform: 'Google/Coursera' },
+                { title: 'Figma for Beginners', type: 'Tutorial', platform: 'Figma Academy' },
+                { title: 'UX Research Methods', type: 'Course', platform: 'Interaction Design Foundation' }
+            ],
+            'cloud-basics': [
+                { title: 'AWS Cloud Practitioner', type: 'Certification', platform: 'AWS' },
+                { title: 'Azure Fundamentals', type: 'Course', platform: 'Microsoft Learn' },
+                { title: 'Google Cloud Platform Basics', type: 'Course', platform: 'Google Cloud' }
+            ],
+            'devops-basics': [
+                { title: 'Docker and Kubernetes', type: 'Course', platform: 'Udemy' },
+                { title: 'Git Version Control', type: 'Tutorial', platform: 'Atlassian' },
+                { title: 'DevOps Culture and Practices', type: 'Course', platform: 'LinkedIn Learning' }
+            ],
+            'business-analysis-basics': [
+                { title: 'Business Analysis Fundamentals', type: 'Course', platform: 'Coursera' },
+                { title: 'SQL for Business Analysis', type: 'Course', platform: 'DataCamp' },
+                { title: 'Requirements Gathering Techniques', type: 'Guide', platform: 'BABOK' }
+            ],
+            'product-management-basics': [
+                { title: 'Product Management Fundamentals', type: 'Course', platform: 'Product School' },
+                { title: 'Lean Startup Methodology', type: 'Book', platform: 'Eric Ries' },
+                { title: 'Agile Product Management', type: 'Course', platform: 'Scrum.org' }
+            ]
+        };
+
+        // Initialize the career graph
+        const careerGraph = new CareerGraph();
+
+        function findCareerPath() {
+            const currentLevel = document.getElementById('currentLevel').value;
+            const targetRole = document.getElementById('targetRole').value;
+
+            if (!currentLevel || !targetRole) {
+                document.getElementById('results').innerHTML = `
+                    <div class="no-results">
+                        Please select both your current level and target role.
+                    </div>
+                `;
+                return;
+            }
+
+            // Find the optimal path using Dijkstra's algorithm
+            const result = careerGraph.findShortestPath(currentLevel, targetRole);
+            
+            if (!result.exists) {
+                document.getElementById('results').innerHTML = `
+                    <div class="no-results">
+                        No direct path found. Consider exploring alternative routes or building foundational skills first.
+                    </div>
+                `;
+                return;
+            }
+
+            displayResults(result);
+        }
+
+        function displayResults(result) {
+            const { path, totalTime } = result;
+            
+            let html = `
+                <div class="algorithm-info">
+                    <strong>🧠 Algorithm Used:</strong> Dijkstra's Shortest Path Algorithm
+                    <br><br>
+                    <strong>⏱️ Estimated Total Time:</strong> ${totalTime} weeks
+                    <br><br>
+                    <strong>📈 Path Length:</strong> ${path.length - 1} steps
+                </div>
+                
+                <div class="path-container">
+                    <div class="path-title">
+                        🛤️ Your Optimal Learning Path
+                    </div>
+                    
+                    <div class="path-steps">
+            `;
+
+            // Generate path steps
+            for (let i = 0; i < path.length - 1; i++) {
+                const current = path[i];
+                const next = path[i + 1];
+                const currentNode = careerGraph.nodes.get(current);
+                const nextNode = careerGraph.nodes.get(next);
+                
+                // Find the edge weight
+                const edges = careerGraph.edges.get(current) || [];
+                const edge = edges.find(e => e.node === next);
+                const duration = edge ? edge.weight : 0;
+
+                html += `
+                    <div class="step">
+                        <div class="step-number">${i + 1}</div>
+                        <div class="step-title">${currentNode.title} → ${nextNode.title}</div>
+                        <div class="step-duration">Duration: ${duration} weeks</div>
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            // Add learning resources
+            const relevantResources = [];
+            path.forEach(nodeId => {
+                if (learningResources[nodeId]) {
+                    relevantResources.push(...learningResources[nodeId]);
+                }
+            });
+
+            if (relevantResources.length > 0) {
+                html += `
+                    <div class="resources">
+                        <h3>📚 Recommended Learning Resources</h3>
+                        <div class="resource-list">
+                `;
+
+                relevantResources.forEach(resource => {
+                    html += `
+                        <div class="resource-item">
+                            <div class="resource-title">${resource.title}</div>
+                            <div class="resource-type">${resource.type} - ${resource.platform}</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('results').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

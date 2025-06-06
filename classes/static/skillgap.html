@@ -1,0 +1,1672 @@
+
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Gap Analysis Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00c9ff 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        select, .multi-select-container {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .multi-select-container {
+            min-height: 150px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: flex-start;
+            align-content: flex-start;
+        }
+
+        .skill-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            user-select: none;
+        }
+
+        .skill-tag:hover {
+            background: #bbdefb;
+            transform: translateY(-2px);
+        }
+
+        .skill-tag.required-skill {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+
+        .skill-tag.required-skill:hover {
+            background: #ffeaa7;
+            border-color: #fdcb6e;
+        }
+
+        .skill-tag.required-skill.selected {
+            background: #f39c12;
+            color: white;
+            border-color: #e67e22;
+        }
+
+        .skill-tag.optional-skill {
+            background: #e8f4fd;
+            color: #2980b9;
+            border: 2px solid #bde2f0;
+        }
+
+        .skill-tag.optional-skill:hover {
+            background: #bde2f0;
+            border-color: #74b9ff;
+        }
+
+        .skill-tag.optional-skill.selected {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+
+        .skill-type {
+            margin-left: 5px;
+            font-size: 0.8rem;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-section {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .progress-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-percentage {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4facfe;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 15px;
+            background: #e1e8ed;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.5s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 40px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #4facfe;
+        }
+
+        .result-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .skill-list li:last-child {
+            border-bottom: none;
+        }
+
+        .skill-priority {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .priority-high {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .priority-medium {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .priority-low {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .learning-path {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .learning-path h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .path-step {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .path-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Skill Gap Analyzer</h1>
+            <p>Identify your learning path with intelligent gap analysis</p>
+        </div>
+
+        <div class="main-content">
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="goalSelect">Select Your Career Goal:</label>
+                    <select id="goalSelect">
+                        <option value="">Choose your target role...</option>
+                        <option value="frontend">Frontend Developer</option>
+                        <option value="backend">Backend Developer</option>
+                        <option value="fullstack">Full Stack Developer</option>
+                        <option value="mobile">Mobile App Developer</option>
+                        <option value="devops">DevOps Engineer</option>
+                        <option value="datascience">Data Scientist</option>
+                        <option value="ml">Machine Learning Engineer</option>
+                        <option value="cybersecurity">Cybersecurity Specialist</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Skills You Already Know:</label>
+                    <div class="multi-select-container" id="skillsContainer">
+                        
+                    </div>
+                </div>
+
+                <button class="analyze-btn" id="analyzeBtn" onclick="analyzeSkillGap()">
+                    🔍 Analyze Skill Gap
+                </button>
+            </div>
+
+            <div class="progress-section" id="progressSection">
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span class="progress-title">Analyzing Your Skills...</span>
+                        <span class="progress-percentage" id="progressPercentage">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" 
+                             style="width: 0%; background: linear-gradient(90deg, #4facfe 0%, #00c9ff 100%);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DSA Concepts Implementation
+        
+        // 1. Hash Map for O(1) skill lookups
+        class SkillMap {
+            constructor() {
+                this.skills = new Map();
+            }
+            
+            add(skill, priority) {
+                this.skills.set(skill, priority);
+            }
+            
+            has(skill) {
+                return this.skills.has(skill);
+            }
+            
+            get(skill) {
+                return this.skills.get(skill);
+            }
+            
+            getAll() {
+                return Array.from(this.skills.entries());
+            }
+        }
+        
+        // 2. Priority Queue for skill prioritization
+        class PriorityQueue {
+            constructor() {
+                this.items = [];
+            }
+            
+            enqueue(element, priority) {
+                const queueElement = { element, priority };
+                let added = false;
+                
+                for (let i = 0; i < this.items.length; i++) {
+                    if (queueElement.priority > this.items[i].priority) {
+                        this.items.splice(i, 0, queueElement);
+                        added = true;
+                        break;
+                    }
+                }
+                
+                if (!added) {
+                    this.items.push(queueElement);
+                }
+            }
+            
+            dequeue() {
+                return this.items.shift();
+            }
+            
+            isEmpty() {
+                return this.items.length === 0;
+            }
+            
+            toArray() {
+                return this.items.map(item => ({
+                    skill: item.element,
+                    priority: item.priority
+                }));
+            }
+        }
+        
+        // 3. Graph for learning path dependencies
+        class LearningGraph {
+            constructor() {
+                this.adjacencyList = new Map();
+            }
+            
+            addVertex(skill) {
+                if (!this.adjacencyList.has(skill)) {
+                    this.adjacencyList.set(skill, []);
+                }
+            }
+            
+            addEdge(prerequisite, skill) {
+                this.addVertex(prerequisite);
+                this.addVertex(skill);
+                this.adjacencyList.get(prerequisite).push(skill);
+            }
+            
+            // Topological sort for learning path
+            topologicalSort(missingSkills) {
+                const visited = new Set();
+                const stack = [];
+                
+                const dfs = (skill) => {
+                    visited.add(skill);
+                    const neighbors = this.adjacencyList.get(skill) || [];
+                    
+                    for (const neighbor of neighbors) {
+                        if (missingSkills.includes(neighbor) && !visited.has(neighbor)) {
+                            dfs(neighbor);
+                        }
+                    }
+                    
+                    stack.push(skill);
+                };
+                
+                for (const skill of missingSkills) {
+                    if (!visited.has(skill)) {
+                        dfs(skill);
+                    }
+                }
+                
+                return stack.reverse();
+            }
+        }
+
+        // Skill definitions with priorities and dependencies
+        const skillDatabase = {
+            frontend: {
+                required: ['HTML', 'CSS', 'JavaScript', 'React', 'Responsive Design', 'Git', 'webpack', 'TypeScript'],
+                optional: ['Vue.js', 'Angular', 'Sass/SCSS', 'Testing (Jest)', 'UI/UX Design']
+            },
+            backend: {
+                required: ['Node.js', 'Python', 'SQL', 'REST APIs', 'Git', 'Database Design', 'Authentication', 'Server Management'],
+                optional: ['GraphQL', 'Docker', 'Redis', 'Microservices', 'AWS']
+            },
+            fullstack: {
+                required: ['HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'SQL', 'REST APIs', 'Git', 'Database Design'],
+                optional: ['TypeScript', 'Docker', 'AWS', 'Testing (Jest)', 'GraphQL']
+            },
+            mobile: {
+                required: ['React Native', 'JavaScript', 'Mobile UI/UX', 'API Integration', 'Git', 'App Store Deployment'],
+                optional: ['Flutter', 'Swift', 'Kotlin', 'Push Notifications', 'Native Modules']
+            },
+            devops: {
+                required: ['Linux', 'Docker', 'Kubernetes', 'CI/CD', 'AWS', 'Git', 'Monitoring', 'Infrastructure as Code'],
+                optional: ['Terraform', 'Jenkins', 'Ansible', 'Prometheus', 'ELK Stack']
+            },
+            datascience: {
+                required: ['Python', 'SQL', 'Statistics', 'Pandas', 'NumPy', 'Data Visualization', 'Machine Learning Basics'],
+                optional: ['R', 'Tableau', 'Jupyter', 'Scikit-learn', 'TensorFlow']
+            },
+            ml: {
+                required: ['Python', 'Statistics', 'Machine Learning Basics', 'TensorFlow', 'PyTorch', 'Data Preprocessing', 'Model Deployment'],
+                optional: ['Deep Learning', 'Computer Vision', 'NLP', 'MLOps', 'Kubernetes']
+            },
+            cybersecurity: {
+                required: ['Network Security', 'Linux', 'Penetration Testing', 'Security Frameworks', 'Incident Response', 'Risk Assessment'],
+                optional: ['Ethical Hacking', 'Cryptography', 'SIEM Tools', 'Compliance', 'Cloud Security']
+            }
+        };
+
+        // All available skills (union of all skill sets)
+        const allSkills = [...new Set(Object.values(skillDatabase).flatMap(role => [...role.required, ...role.optional]))].sort();
+
+        // Initialize skill dependencies graph
+        const learningGraph = new LearningGraph();
+        
+        // Add some example dependencies
+        learningGraph.addEdge('HTML', 'CSS');
+        learningGraph.addEdge('CSS', 'JavaScript');
+        learningGraph.addEdge('JavaScript', 'React');
+        learningGraph.addEdge('JavaScript', 'Node.js');
+        learningGraph.addEdge('SQL', 'Database Design');
+        learningGraph.addEdge('Linux', 'Docker');
+        learningGraph.addEdge('Docker', 'Kubernetes');
+        learningGraph.addEdge('Python', 'Pandas');
+        learningGraph.addEdge('Pandas', 'Machine Learning Basics');
+        learningGraph.addEdge('Statistics', 'Machine Learning Basics');
+        learningGraph.addEdge('Machine Learning Basics', 'TensorFlow');
+
+        // Initialize the application
+        function initializeApp() {
+            populateSkills();
+            
+            document.getElementById('goalSelect').addEventListener('change', function() {
+                populateSkills();
+            });
+        }
+
+        function populateSkills() {
+            const container = document.getElementById('skillsContainer');
+            const selectedGoal = document.getElementById('goalSelect').value;
+            
+            container.innerHTML = '';
+            
+            // If no goal selected, show placeholder message
+            if (!selectedGoal) {
+                const placeholder = document.createElement('div');
+                placeholder.style.cssText = 'color: #666; font-style: italic; padding: 20px; text-align: center;';
+                placeholder.textContent = 'Please select a career goal first to see relevant skills';
+                container.appendChild(placeholder);
+                return;
+            }
+            
+            // Get skills for the selected goal
+            const goalSkills = skillDatabase[selectedGoal];
+            const relevantSkills = [...goalSkills.required, ...goalSkills.optional].sort();
+            
+            relevantSkills.forEach(skill => {
+                const skillTag = document.createElement('div');
+                skillTag.className = 'skill-tag';
+                
+                // Add visual indicator for required vs optional skills
+                if (goalSkills.required.includes(skill)) {
+                    skillTag.classList.add('required-skill');
+                } else {
+                    skillTag.classList.add('optional-skill');
+                }
+                
+                skillTag.innerHTML = `
+                    ${skill}
+                    <span class="skill-type">${goalSkills.required.includes(skill) ? '⭐' : '💡'}</span>
+                `;
+                skillTag.onclick = () => toggleSkill(skillTag);
+                container.appendChild(skillTag);
+            });
+            
+            // Add legend
+            if (relevantSkills.length > 0) {
+                const legend = document.createElement('div');
+                legend.style.cssText = 'width: 100%; margin-top: 10px; font-size: 0.9rem; color: #666; text-align: center;';
+                legend.innerHTML = '⭐ Required Skills &nbsp;&nbsp;&nbsp; 💡 Optional Skills';
+                container.appendChild(legend);
+            }
+        }
+
+        function toggleSkill(element) {
+            element.classList.toggle('selected');
+        }
+
+        function getSelectedSkills() {
+            const selectedTags = document.querySelectorAll('.skill-tag.selected:not([style*="display: none"])');
+            return Array.from(selectedTags).map(tag => tag.textContent.replace(/[⭐💡]/g, '').trim());
+        }
+
+        async function analyzeSkillGap() {
+            const goal = document.getElementById('goalSelect').value;
+            const knownSkills = getSelectedSkills();
+            
+            if (!goal) {
+                alert('Please select a career goal first!');
+                return;
+            }
+            
+            // Show progress section
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            
+            // Simulate analysis with progress bar
+            await simulateAnalysis();
+            
+            // Perform actual analysis
+            const analysis = performSkillGapAnalysis(goal, knownSkills);
+            
+            // Display results
+            displayResults(analysis);
+        }
+
+        function simulateAnalysis() {
+            return new Promise((resolve) => {
+                const progressFill = document.getElementById('progressFill');
+                const progressPercentage = document.getElementById('progressPercentage');
+                let progress = 0;
+                
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 100) progress = 100;
+                    
+                    progressFill.style.width = progress + '%';
+                    progressPercentage.textContent = Math.round(progress) + '%';
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        setTimeout(resolve, 500);
+                    }
+                }, 200);
+            });
+        }
+
+        function performSkillGapAnalysis(goal, knownSkills) {
+            const roleSkills = skillDatabase[goal];
+            const knownSkillsSet = new Set(knownSkills);
+            
+            // Create skill maps for efficient lookups
+            const requiredSkillMap = new SkillMap();
+            const optionalSkillMap = new SkillMap();
+            
+            roleSkills.required.forEach(skill => requiredSkillMap.add(skill, 3));
+            roleSkills.optional.forEach(skill => optionalSkillMap.add(skill, 1));
+            
+            // Find missing skills
+            const missingRequired = roleSkills.required.filter(skill => !knownSkillsSet.has(skill));
+            const missingOptional = roleSkills.optional.filter(skill => !knownSkillsSet.has(skill));
+            
+            // Create priority queue for missing skills
+            const priorityQueue = new PriorityQueue();
+            
+            missingRequired.forEach(skill => {
+                priorityQueue.enqueue(skill, 3); // High priority
+            });
+            
+            missingOptional.forEach(skill => {
+                priorityQueue.enqueue(skill, 1); // Low priority
+            });
+            
+            // Calculate completion percentage
+            const totalSkills = roleSkills.required.length + roleSkills.optional.length;
+            const knownRelevantSkills = knownSkills.filter(skill => 
+                roleSkills.required.includes(skill) || roleSkills.optional.includes(skill)
+            ).length;
+            const completionPercentage = Math.round((knownRelevantSkills / totalSkills) * 100);
+            
+            // Generate learning path using topological sort
+            const learningPath = learningGraph.topologicalSort([...missingRequired, ...missingOptional]);
+            
+            return {
+                goal,
+                knownSkills: knownSkills.filter(skill => 
+                    roleSkills.required.includes(skill) || roleSkills.optional.includes(skill)
+                ),
+                missingRequired,
+                missingOptional,
+                prioritizedSkills: priorityQueue.toArray(),
+                completionPercentage,
+                learningPath
+            };
+        }
+
+        function displayResults(analysis) {
+            document.getElementById('progressSection').style.display = 'none';
+            
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            
+            resultsSection.innerHTML = `
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span class="progress-title">Skill Completion for ${analysis.goal.charAt(0).toUpperCase() + analysis.goal.slice(1)} Developer</span>
+                        <span class="progress-percentage">${analysis.completionPercentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${analysis.completionPercentage}%; background: linear-gradient(90deg, #4facfe 0%, #00c9ff 100%);"></div>
+                    </div>
+                </div>
+                
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>✅ Skills You Have (${analysis.knownSkills.length})</h3>
+                        <ul class="skill-list">
+                            ${analysis.knownSkills.map(skill => `<li>${skill}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>📚 Skills to Learn (${analysis.missingRequired.length + analysis.missingOptional.length})</h3>
+                        <ul class="skill-list">
+                            ${analysis.prioritizedSkills.map(item => `
+                                <li>
+                                    ${item.skill}
+                                    <span class="skill-priority priority-${item.priority === 3 ? 'high' : item.priority === 2 ? 'medium' : 'low'}">
+                                        ${item.priority === 3 ? 'Required' : 'Optional'}
+                                    </span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="learning-path">
+                    <h3>🗺️ Recommended Learning Path</h3>
+                    ${analysis.learningPath.slice(0, 5).map((skill, index) => `
+                        <div class="path-step">
+                            <span class="step-number">${index + 1}</span>
+                            <strong>${skill}</strong>
+                            <p>Focus on mastering ${skill} as it's ${analysis.missingRequired.includes(skill) ? 'essential' : 'valuable'} for your goal.</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Gap Analysis Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(100deg, #141E30 , #243B55 ); /* Dark gradient */
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0; /* Default light text color */
+            overflow-x: hidden; /* Prevent horizontal scroll from icons if any edge cases */
+        }
+
+        .animated-background-icons {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0; /* Behind the main container */
+        }
+
+        .animated-icon {
+            position: absolute;
+            color: rgba(180, 190, 220, 0.12); /* Increased brightness/opacity */
+            opacity: 0;
+            user-select: none;
+            animation-name: floatAndDrift;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        @keyframes floatAndDrift {
+            0% {
+                transform: translateY(100vh) translateX(var(--startX, 0px)) rotate(0deg);
+                opacity: 0;
+            }
+            10%, 90% { /* Fade in and out duration */
+                opacity: 1; 
+            }
+             50% {
+                transform: translateY(50vh) translateX(calc(var(--startX, 0px) + var(--driftX, 0px) / 2)) rotate(calc(var(--rotateEnd, 0deg) / 2));
+            }
+            100% {
+                transform: translateY(-150px) translateX(calc(var(--startX, 0px) + var(--driftX, 0px))) rotate(var(--rotateEnd, 0deg));
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+           background: rgba(40, 44, 52, 0.5);
+           /*  background: white;*/
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); /* Adjusted shadow for dark theme */
+            overflow: hidden;
+            position: relative; /* To ensure it's above the animated background */
+            z-index: 1;       /* To ensure it's above the animated background */
+        }
+
+        .header {
+          /*  background: linear-gradient(135deg, #2a52b8 0%, #2d4ac1 100%); */ /* Vibrant dark gradient - Blue */
+         background: linear-gradient(135deg, #1e3c72, #2a5298);
+
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.7rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+      .back-button {
+            /*background: linear-gradient(135deg, #2a52b8 0%, #2d4ac1 100%); *//* Blue gradient */
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(21, 63, 143, 0.4); /* Shadow matching blue gradient */
+            margin-top: 40px;
+            margin-left: 68px;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(7, 122, 209, 0.6); /* Brighter blue shadow on hover */
+        }
+
+        .back-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .Btn1 {
+            /*background: linear-gradient(135deg, #2a52b8 0%, #2d4ac1 100%); *//* Blue gradient */
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(21, 63, 143, 0.4); /* Shadow matching blue gradient */
+            margin-top: 40px;
+            margin-left: 30px;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .Btn1:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(7, 122, 209, 0.6); /* Brighter blue shadow on hover */
+        }
+
+        .Btn1:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .Btn2 {
+            /*background: linear-gradient(135deg, #2a52b8 0%, #2d4ac1 100%); *//* Blue gradient */
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(21, 63, 143, 0.4); /* Shadow matching blue gradient */
+            margin-top: 40px;
+            margin-left: 30px;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .Btn2:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(7, 122, 209, 0.6); /* Brighter blue shadow on hover */
+        }
+
+        .Btn2:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #c5c8c6; /* Lighter text for labels */
+            font-size: 1.1rem;
+        }
+
+        select, .multi-select-container {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #4a4e69; /* Darker border */
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+           /* background-color: #2c313a;*/ /* Dark background for select/inputs */
+           background: linear-gradient(135deg, rgba(36,59,85,0.9), rgba(20,30,48,0.9));
+            color: white; /* Light text for select/inputs */
+            
+        }
+        
+        select option {
+            background-color: #2c313a;
+            color: white;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #61afef; /* Brighter blue for focus */
+            box-shadow: 0 0 0 3px rgba(97, 175, 239, 0.25); /* Adjusted glow */
+        }
+
+        .multi-select-container {
+            min-height: 150px;
+            max-height: 200px;
+            overflow-y: auto;
+             background: linear-gradient(135deg, rgba(36,59,85,0.9), rgba(20,30,48,0.9)); /* Dark background for multi-select */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: flex-start;
+            align-content: flex-start;
+        }
+
+        .skill-tag {
+            background: #4c566a; 
+            color: #d8dee9;     
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #4c566a; 
+            user-select: none;
+        }
+
+        .skill-tag:hover {
+            background: #4c566a; 
+            transform: translateY(-2px);
+            border-color: #5e81ac; 
+        }
+
+        .skill-tag.required-skill {
+            background: #4c566a; 
+            color: #ebcb8b;     
+            border: 2px solid #5e5473;
+        }
+
+        .skill-tag.required-skill:hover {
+            background: #5e5473;
+            border-color: #b48ead; 
+        }
+
+        .skill-tag.required-skill.selected {
+            background: #ebcb8b; 
+            color: #2e3440;     
+            border-color: #d08770; 
+        }
+
+        .skill-tag.optional-skill {
+            background: #3b596a; 
+            color: #88c0d0;     
+            border: 2px solid #4c7080;
+        }
+
+        .skill-tag.optional-skill:hover {
+            background: #4c7080;
+            border-color: #81a1c1; 
+        }
+
+        .skill-tag.optional-skill.selected {
+            background: #88c0d0; 
+            color: #2e3440;     
+            border-color: #5e81ac; 
+        }
+
+
+        .skill-type {
+            margin-left: 5px;
+            font-size: 0.8rem;
+        }
+
+        .analyze-btn {
+            /*background: linear-gradient(135deg, #2a52b8 0%, #2d4ac1 100%); *//* Blue gradient */
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(21, 63, 143, 0.4); /* Shadow matching blue gradient */
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(7, 122, 209, 0.6); /* Brighter blue shadow on hover */
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-section {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .progress-container {
+           /* background: white; */
+           background: linear-gradient(135deg, rgba(36,59,85,0.9), rgba(20,30,48,0.9));
+ 
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #c5c8c6; 
+        }
+
+        .progress-percentage {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #61afef; 
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 15px;
+          /*  background: #3a3f44; */
+          background: lightslategray;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.5s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); 
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 40px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+          /*  background: #282c34; */
+        background: linear-gradient(135deg, rgba(36,59,85,0.9), rgba(20,30,48,0.9));
+
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); 
+            border-left: 5px solid #61afef; 
+        }
+
+        .result-card h3 {
+            color: #eceff4; 
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #3a3f4c; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #d8dee9; 
+        }
+
+        .skill-list li:last-child {
+            border-bottom: none;
+        }
+
+        .skill-priority {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .priority-high {
+            background: #5c2b29; 
+            color: #e06c75; 
+        }
+
+        .priority-medium {
+            background: #6a5028; 
+            color: #d19a66; 
+        }
+
+        .priority-low {
+            background: #2a4d36; 
+            color: #98c379; 
+        }
+        
+        .learning-path {
+           /* background: linear-gradient(135deg, #5f2c82 0%, #49a09d 100%); */
+           background: linear-gradient(135deg, rgba(36,59,85,0.9), rgba(20,30,48,0.9));
+
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .learning-path h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            color: #eceff4;
+        }
+
+        .path-step {
+            background: rgba(255, 255, 255, 0.05); 
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(5px); 
+            display: flex; 
+            align-items: flex-start; 
+        }
+
+        .path-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.08); 
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 15px; 
+            font-weight: 600;
+            color: #e5e9f0;
+            flex-shrink: 0; 
+        }
+
+        .path-step div strong { 
+             display: block; 
+             margin-bottom: 5px; 
+        }
+
+
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-background-icons">
+        <!-- Icons will be populated by JavaScript -->
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Career Skill Bridge Analyzer</h1>
+            <p>Empowering You to Discover, Understand, and Overcome Your Skill Gaps for a Brighter Career</p>
+        </div>
+        <button class="back-button" onclick="window.location.href='profile.html'">← Back to Profile</button>
+        <button class="Btn1" onclick="window.location.href='careerpath.html'">
+   <span class="logoIcon">📈</span>
+   <span class="tooltip">Career Path</span>
+</button>
+<button class="Btn2" onclick="window.location.href='mentor.html'">
+   <span class="logoIcon">👤</span>
+   <span class="tooltip">Mentor Mapper</span>
+</button>
+        <div class="main-content">
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="goalSelect">Select Your Career Goal:</label>
+                    <select id="goalSelect">
+                        <option value="">Choose your target role...</option>
+                        <option value="frontend">Frontend Developer</option>
+                        <option value="backend">Backend Developer</option>
+                        <option value="fullstack">Full Stack Developer</option>
+                        <option value="mobile">Mobile App Developer</option>
+                        <option value="devops">DevOps Engineer</option>
+                        <option value="datascience">Data Scientist</option>
+                        <option value="ml">Machine Learning Engineer</option>
+                        <option value="cybersecurity">Cybersecurity Specialist</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Skills You Already Know:</label>
+                    <div class="multi-select-container" id="skillsContainer">
+                        <!-- Skills will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <button class="analyze-btn" id="analyzeBtn" onclick="analyzeSkillGap()">
+                    🔍 Analyze Skill Gap
+                </button>
+            </div>
+
+            <div class="progress-section" id="progressSection">
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span class="progress-title">Analyzing Your Skills...</span>
+                        <span class="progress-percentage" id="progressPercentage">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" 
+                             style="width: 0%; background: linear-gradient(90deg, #5e81ac 0%, #88c0d0 100%);"></div> 
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <!-- Results will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DSA Concepts Implementation
+        class SkillMap {
+            constructor() { this.skills = new Map(); }
+            add(skill, priority) { this.skills.set(skill, priority); }
+            has(skill) { return this.skills.has(skill); }
+            get(skill) { return this.skills.get(skill); }
+            getAll() { return Array.from(this.skills.entries()); }
+        }
+        
+        class PriorityQueue {
+            constructor() { this.items = []; }
+            enqueue(element, priority) {
+                const queueElement = { element, priority }; let added = false;
+                for (let i = 0; i < this.items.length; i++) {
+                    if (queueElement.priority > this.items[i].priority) {
+                        this.items.splice(i, 0, queueElement); added = true; break;
+                    }
+                }
+                if (!added) { this.items.push(queueElement); }
+            }
+            dequeue() { return this.items.shift(); }
+            isEmpty() { return this.items.length === 0; }
+            toArray() { return this.items.map(item => ({ skill: item.element, priority: item.priority }));}
+        }
+        
+        class LearningGraph {
+            constructor() { this.adjacencyList = new Map(); }
+            addVertex(skill) { if (!this.adjacencyList.has(skill)) { this.adjacencyList.set(skill, []); } }
+            addEdge(prerequisite, skill) {
+                this.addVertex(prerequisite); this.addVertex(skill);
+                this.adjacencyList.get(prerequisite).push(skill);
+            }
+            topologicalSort(missingSkills) {
+                const visited = new Set(); const stack = [];
+                const dfs = (skill) => {
+                    visited.add(skill);
+                    const neighbors = this.adjacencyList.get(skill) || [];
+                    for (const neighbor of neighbors) {
+                        if (missingSkills.includes(neighbor) && !visited.has(neighbor)) { dfs(neighbor); }
+                    }
+                    stack.push(skill);
+                };
+                const allSkillsInGraph = new Set(this.adjacencyList.keys());
+                missingSkills.forEach(skill => { if (allSkillsInGraph.has(skill)) { this.addVertex(skill); }});
+                const skillsToProcessForSort = missingSkills.filter(skill => allSkillsInGraph.has(skill));
+                for (const skill of skillsToProcessForSort) { if (!visited.has(skill)) { dfs(skill); } }
+                let sortedPath = stack.reverse();
+                const skillsInSortedPath = new Set(sortedPath);
+                missingSkills.forEach(skill => { if (!skillsInSortedPath.has(skill)) { sortedPath.push(skill); }});
+                return sortedPath;
+            }
+        }
+
+        const skillDatabase = {
+            frontend: { required: ['HTML', 'CSS', 'JavaScript', 'React', 'Responsive Design', 'Git', 'webpack', 'TypeScript'], optional: ['Vue.js', 'Angular', 'Sass/SCSS', 'Testing (Jest)', 'UI/UX Design']},
+            backend: { required: ['Node.js', 'Python', 'SQL', 'REST APIs', 'Git', 'Database Design', 'Authentication', 'Server Management'], optional: ['GraphQL', 'Docker', 'Redis', 'Microservices', 'AWS']},
+            fullstack: { required: ['HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'SQL', 'REST APIs', 'Git', 'Database Design'], optional: ['TypeScript', 'Docker', 'AWS', 'Testing (Jest)', 'GraphQL']},
+            mobile: { required: ['React Native', 'JavaScript', 'Mobile UI/UX', 'API Integration', 'Git', 'App Store Deployment'], optional: ['Flutter', 'Swift', 'Kotlin', 'Push Notifications', 'Native Modules']},
+            devops: { required: ['Linux', 'Docker', 'Kubernetes', 'CI/CD', 'AWS', 'Git', 'Monitoring', 'Infrastructure as Code'], optional: ['Terraform', 'Jenkins', 'Ansible', 'Prometheus', 'ELK Stack']},
+            datascience: { required: ['Python', 'SQL', 'Statistics', 'Pandas', 'NumPy', 'Data Visualization', 'Machine Learning Basics'], optional: ['R', 'Tableau', 'Jupyter', 'Scikit-learn', 'TensorFlow']},
+            ml: { required: ['Python', 'Statistics', 'Machine Learning Basics', 'TensorFlow', 'PyTorch', 'Data Preprocessing', 'Model Deployment'], optional: ['Deep Learning', 'Computer Vision', 'NLP', 'MLOps', 'Kubernetes']},
+            cybersecurity: { required: ['Network Security', 'Linux', 'Penetration Testing', 'Security Frameworks', 'Incident Response', 'Risk Assessment'], optional: ['Ethical Hacking', 'Cryptography', 'SIEM Tools', 'Compliance', 'Cloud Security']}
+        };
+        const allSkills = [...new Set(Object.values(skillDatabase).flatMap(role => [...role.required, ...role.optional]))].sort();
+        const learningGraph = new LearningGraph();
+        learningGraph.addEdge('HTML', 'CSS'); learningGraph.addEdge('CSS', 'JavaScript');
+        learningGraph.addEdge('JavaScript', 'React'); learningGraph.addEdge('JavaScript', 'Vue.js'); learningGraph.addEdge('JavaScript', 'Angular');
+        learningGraph.addEdge('JavaScript', 'TypeScript'); learningGraph.addEdge('React', 'Testing (Jest)'); learningGraph.addEdge('CSS', 'Sass/SCSS');
+        learningGraph.addEdge('JavaScript', 'webpack'); learningGraph.addEdge('JavaScript', 'Node.js'); learningGraph.addEdge('Python', 'REST APIs');
+        learningGraph.addEdge('Node.js', 'REST APIs'); learningGraph.addEdge('SQL', 'Database Design'); learningGraph.addEdge('REST APIs', 'Authentication');
+        learningGraph.addEdge('Node.js', 'Microservices'); learningGraph.addEdge('Python', 'Microservices'); learningGraph.addEdge('Linux', 'Server Management');
+        learningGraph.addEdge('Linux', 'Docker'); learningGraph.addEdge('Docker', 'Kubernetes'); learningGraph.addEdge('Git', 'CI/CD');
+        learningGraph.addEdge('Docker', 'CI/CD'); learningGraph.addEdge('AWS', 'Infrastructure as Code'); learningGraph.addEdge('Infrastructure as Code', 'Terraform');
+        learningGraph.addEdge('Kubernetes', 'Monitoring'); learningGraph.addEdge('Monitoring', 'Prometheus'); learningGraph.addEdge('Monitoring', 'ELK Stack');
+        learningGraph.addEdge('Python', 'Pandas'); learningGraph.addEdge('Python', 'NumPy'); learningGraph.addEdge('Pandas', 'Data Visualization');
+        learningGraph.addEdge('NumPy', 'Data Visualization'); learningGraph.addEdge('Statistics', 'Machine Learning Basics'); learningGraph.addEdge('Python', 'Machine Learning Basics');
+        learningGraph.addEdge('Machine Learning Basics', 'Scikit-learn'); learningGraph.addEdge('Machine Learning Basics', 'TensorFlow');
+        learningGraph.addEdge('Machine Learning Basics', 'PyTorch'); learningGraph.addEdge('TensorFlow', 'Deep Learning'); learningGraph.addEdge('PyTorch', 'Deep Learning');
+        learningGraph.addEdge('Data Preprocessing', 'Machine Learning Basics'); learningGraph.addEdge('Machine Learning Basics', 'Model Deployment');
+        learningGraph.addEdge('Model Deployment', 'MLOps'); learningGraph.addEdge('Linux', 'Network Security'); learningGraph.addEdge('Network Security', 'Penetration Testing');
+        learningGraph.addEdge('Penetration Testing', 'Ethical Hacking'); learningGraph.addEdge('Security Frameworks', 'Risk Assessment');
+        learningGraph.addEdge('Security Frameworks', 'Compliance'); learningGraph.addEdge('Network Security', 'Incident Response');
+        learningGraph.addEdge('Network Security', 'SIEM Tools'); learningGraph.addEdge('AWS', 'Cloud Security');
+        allSkills.forEach(skill => learningGraph.addVertex(skill));
+
+        function createBackgroundAnimation() {
+            const iconContainer = document.querySelector('.animated-background-icons');
+            if (!iconContainer) return;
+
+            const icons = ['💻', '📈', '⚙️', '💾', '🎨', '🚀', '☁️', '📊', '🧠', '🛡️', '🔑', '🔗', '⚡️', '🎯', '📡', '🔧', '🧪', '📱', '🤖', '💼', '🌟', '🛰️', '🔌', '✨', '🧬', '🌍', '🛠️', '🧭', '🏗️', '💡', '🧑‍💻', '🧑‍🔬', '🧑‍🚀', '🧑‍🔧', '🧱', '📈', '📊']; // Expanded icon list
+            const numIcons = 30; 
+
+            for (let i = 0; i < numIcons; i++) {
+                const iconEl = document.createElement('span');
+                iconEl.className = 'animated-icon';
+                iconEl.textContent = icons[Math.floor(Math.random() * icons.length)];
+                
+                const startX = Math.random() * 100; 
+                iconEl.style.left = `${startX}vw`;
+                iconEl.style.fontSize = `${0.5 + Math.random() * 2.5}rem`; // Larger: 2.0rem to 4.5rem
+                iconEl.style.animationDelay = `${Math.random() * 15}s`; 
+                iconEl.style.animationDuration = `${15 + Math.random() * 10}s`; 
+                
+                iconEl.style.setProperty('--startX', `${(Math.random() - 0.5) * 50}px`); 
+                iconEl.style.setProperty('--driftX', `${(Math.random() - 0.5) * 200}px`); 
+                iconEl.style.setProperty('--rotateEnd', `${(Math.random() > 0.5 ? 1 : -1) * (180 + Math.random() * 180)}deg`); 
+                
+                iconContainer.appendChild(iconEl);
+            }
+        }
+
+        function initializeApp() {
+            populateSkills();
+            createBackgroundAnimation(); 
+            document.getElementById('goalSelect').addEventListener('change', populateSkills);
+        }
+
+        function populateSkills() {
+            const container = document.getElementById('skillsContainer');
+            const selectedGoal = document.getElementById('goalSelect').value;
+            
+            container.innerHTML = ''; // Clear previous skills
+            
+            if (!selectedGoal) { // This condition is crucial and correct
+                const placeholder = document.createElement('div');
+                placeholder.style.cssText = 'color: #a0a0a0; font-style: italic; padding: 20px; text-align: center;';
+                placeholder.textContent = 'Please select a career goal first to see relevant skills';
+                container.appendChild(placeholder);
+                return;
+            }
+            
+            const goalSkills = skillDatabase[selectedGoal];
+            const relevantSkills = [...new Set([...goalSkills.required, ...goalSkills.optional])].sort();
+            
+            relevantSkills.forEach(skill => {
+                const skillTag = document.createElement('div');
+                skillTag.className = 'skill-tag';
+                
+                if (goalSkills.required.includes(skill)) {
+                    skillTag.classList.add('required-skill');
+                } else {
+                    skillTag.classList.add('optional-skill');
+                }
+                
+                skillTag.innerHTML = `
+                    ${skill}
+                    <span class="skill-type">${goalSkills.required.includes(skill) ? '⭐' : '💡'}</span>
+                `;
+                skillTag.dataset.skillName = skill; // Correctly storing skill name
+                skillTag.onclick = () => toggleSkill(skillTag); // Correctly attaching click handler
+                container.appendChild(skillTag);
+            });
+            
+            if (relevantSkills.length > 0) {
+                const legend = document.createElement('div');
+                legend.style.cssText = 'width: 100%; margin-top: 15px; font-size: 0.9rem; color: #a0a0a0; text-align: center; padding-bottom: 5px;';
+                legend.innerHTML = '⭐ Required Skills     💡 Optional Skills';
+                container.appendChild(legend);
+            }
+        }
+
+        function toggleSkill(element) { 
+            element.classList.toggle('selected'); // Correctly toggles the .selected class
+        }
+
+        function getSelectedSkills() {
+            // Correctly gets all elements with .skill-tag and .selected classes
+            const selectedTags = document.querySelectorAll('.skill-tag.selected'); 
+            // Correctly extracts the skill name from the dataset
+            return Array.from(selectedTags).map(tag => tag.dataset.skillName); 
+        }
+
+        async function analyzeSkillGap() {
+            const goal = document.getElementById('goalSelect').value;
+            const knownSkills = getSelectedSkills(); // Gets the selected skills
+            
+            if (!goal) { 
+                alert('Please select a career goal first!'); 
+                return; 
+            }
+            
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('analyzeBtn').disabled = true;
+            
+            await simulateAnalysis();
+            // knownSkills are passed to the analysis function
+            const analysis = performSkillGapAnalysis(goal, knownSkills); 
+            displayResults(analysis);
+            document.getElementById('analyzeBtn').disabled = false;
+        }
+
+        function simulateAnalysis() {
+            return new Promise((resolve) => {
+                const progressFill = document.getElementById('progressFill');
+                const progressPercentageText = document.getElementById('progressPercentage');
+                let currentProgress = 0;
+                
+                progressFill.style.width = '0%';
+                progressPercentageText.textContent = '0%';
+
+                const interval = setInterval(() => {
+                    currentProgress += Math.random() * 15;
+                    if (currentProgress > 100) currentProgress = 100;
+                    
+                    progressFill.style.width = currentProgress + '%';
+                    progressPercentageText.textContent = Math.round(currentProgress) + '%';
+                    
+                    if (currentProgress >= 100) {
+                        clearInterval(interval);
+                        setTimeout(resolve, 500);
+                    }
+                }, 200);
+            });
+        }
+
+        function performSkillGapAnalysis(goal, knownSkills) { // knownSkills is received here
+            const roleSkills = skillDatabase[goal];
+            const knownSkillsSet = new Set(knownSkills); // And used to create a Set for efficient lookup
+            
+            const missingRequired = roleSkills.required.filter(skill => !knownSkillsSet.has(skill));
+            const missingOptional = roleSkills.optional.filter(skill => !knownSkillsSet.has(skill));
+            
+            const priorityQueue = new PriorityQueue();
+            missingRequired.forEach(skill => priorityQueue.enqueue(skill, 3)); 
+            missingOptional.forEach(skill => priorityQueue.enqueue(skill, 1)); 
+            
+            const totalGoalSkills = roleSkills.required.length + roleSkills.optional.length;
+            const knownRelevantSkillsCount = knownSkills.filter(skill => 
+                roleSkills.required.includes(skill) || roleSkills.optional.includes(skill)
+            ).length;
+            
+            const completionPercentage = totalGoalSkills > 0 ? Math.round((knownRelevantSkillsCount / totalGoalSkills) * 100) : 0;
+            
+            const allMissingSkills = [...missingRequired, ...missingOptional];
+            let learningPath = learningGraph.topologicalSort(allMissingSkills);
+            learningPath = learningPath.filter(skill => allMissingSkills.includes(skill));
+
+            return {
+                goal,
+                knownSkills: knownSkills.filter(skill => 
+                    roleSkills.required.includes(skill) || roleSkills.optional.includes(skill)
+                ).sort(),
+                missingRequired,
+                missingOptional,
+                prioritizedSkills: priorityQueue.toArray(),
+                completionPercentage,
+                learningPath
+            };
+        }
+
+        function displayResults(analysis) {
+            document.getElementById('progressSection').style.display = 'none';
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            const goalName = analysis.goal.charAt(0).toUpperCase() + analysis.goal.slice(1);
+            
+            resultsSection.innerHTML = `
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span class="progress-title">Skill Completion for ${goalName}</span>
+                        <span class="progress-percentage">${analysis.completionPercentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${analysis.completionPercentage}%; background: linear-gradient(90deg, #5e81ac 0%, #88c0d0 100%);"></div>
+                    </div>
+                </div>
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>✅ Skills You Have (${analysis.knownSkills.length})</h3>
+                        ${analysis.knownSkills.length > 0 ? `<ul class="skill-list">${analysis.knownSkills.map(skill => `<li>${skill}</li>`).join('')}</ul>` : '<p style="color: #a0a0a0;">No relevant skills selected for this goal.</p>'}
+                    </div>
+                    <div class="result-card">
+                        <h3>📚 Skills to Learn (${analysis.missingRequired.length + analysis.missingOptional.length})</h3>
+                        ${(analysis.missingRequired.length + analysis.missingOptional.length) > 0 ? `<ul class="skill-list">${analysis.prioritizedSkills.map(item => `<li>${item.skill}<span class="skill-priority priority-${item.priority === 3 ? 'high' : 'low'}">${item.priority === 3 ? 'Required' : 'Optional'}</span></li>`).join('')}</ul>` : '<p style="color: #a0a0a0;">You have all the skills for this goal!</p>'}
+                    </div>
+                </div>
+                ${analysis.learningPath.length > 0 ? `
+                <div class="learning-path">
+                    <h3>🗺 Recommended Learning Path (Top 5)</h3>
+                    ${analysis.learningPath.slice(0, 5).map((skill, index) => `
+                        <div class="path-step">
+                            <span class="step-number">${index + 1}</span>
+                            <div>
+                                <strong>${skill}</strong>
+                                <p style="font-size:0.9em; opacity: 0.8;">Focus on mastering ${skill} as it's ${analysis.missingRequired.includes(skill) ? 'an essential required skill' : 'a valuable optional skill'} for your goal.</p>
+                            </div>
+                        </div>`).join('')}
+                    ${analysis.learningPath.length > 5 ? '<p style="text-align:center; margin-top:15px; font-size:0.9em; opacity:0.8;">...and more, following dependencies.</p>' : ''}
+                </div>` : (analysis.missingRequired.length + analysis.missingOptional.length) > 0 ? `
+                <div class="learning-path"><h3>🗺 Recommended Learning Path</h3><p style="opacity: 0.8;">No specific prerequisite order found for the remaining skills. You can learn them in any preferred order or based on interest.</p></div>` : ''}
+            `;
+        }
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

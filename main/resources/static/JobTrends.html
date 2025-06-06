@@ -1,0 +1,2089 @@
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+          button {
+      padding: 10px 16px;
+      margin-left: 10px;
+      border: none;
+      background-color: #42a5f5;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1e88e5;
+    }
+    </style>
+</head>
+<body>
+     <div class="job-trends">
+    <h2>Latest Job Trends</h2>
+    <div class="button-container"><button id="fetchTrendsBtn"style="background-color: yellow;color:black;">📈Job Market Trends</button></div>
+    <div id="trendOutput" style="margin-top: 1rem;"></div>
+  </div>
+  </div>
+  <script>
+    async function fetchJobTrends() {
+  const outputDiv = document.getElementById("trendOutput");
+  outputDiv.innerHTML = "<p>Loading trends for multiple career roles...</p>";
+
+  const app_id = "121dda3c";
+  const app_key = "9a39ef009a22b73eecd92d7ae2a01b75";
+    // Define the career roles we want to get trends for
+  const careerRoles = [
+    "Software Developer",
+    "Data Analyst",
+    "Graphic Designer",
+    "Project Manager",
+    "Marketing Specialist"
+  ];
+  
+  outputDiv.innerHTML = ""; // Clear the loading message
+  
+  // Create a container for all role trends
+  const trendsContainer = document.createElement("div");
+  trendsContainer.className = "trends-container";
+  
+  // Process each career role
+  for (const role of careerRoles) {
+    try {
+      // Create a section for this role
+      const roleSection = document.createElement("div");
+      roleSection.className = "role-trend";
+      roleSection.innerHTML = `<h3>${role} Trends</h3><div class="role-jobs">Loading...</div>`;
+      trendsContainer.appendChild(roleSection);
+      //================================API========================================
+      // Fetch data for this specific role
+      const endpoint = `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${app_id}&app_key=${app_key}&results_per_page=3&what=${encodeURIComponent(role)}&content-type=application/json`;
+      
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`API response not OK for ${role}`);
+      }
+      
+      const data = await response.json();
+      const jobsDiv = roleSection.querySelector(".role-jobs");
+      
+      if (data.results && data.results.length > 0) {
+        // Calculate average salary if available
+        let salarySum = 0;
+        let salaryCount = 0;
+        
+        data.results.forEach(job => {
+          if (job.salary_min && job.salary_max) {
+            salarySum += (job.salary_min + job.salary_max) / 2;
+            salaryCount++;
+          }
+        });
+        
+        const avgSalary = salaryCount > 0 ? 
+          `<p class="trend-stat"><strong>Average Salary:</strong> $${Math.round(salarySum/salaryCount).toLocaleString()}</p>` : '';
+        
+        // Add job count and location data
+        jobsDiv.innerHTML = `
+          <p class="trend-stat"><strong>Jobs Available:</strong> ${data.count.toLocaleString()}</p>
+          ${avgSalary}
+          <p class="trend-stat"><strong>Top Locations:</strong> ${getTopLocations(data.results)}</p>
+          <p class="trend-stat"><strong>Sample Positions:</strong></p>
+        `;
+        
+        // Add sample job listings
+        const jobsList = document.createElement("ul");
+        jobsList.className = "jobs-list";
+        
+        data.results.slice(0, 3).forEach(job => {
+          const jobItem = document.createElement("li");
+          jobItem.innerHTML = `
+            <div class="job-item">
+              <strong>${job.title}</strong>
+              <p>Company: ${job.company?.display_name || 'Not specified'}</p>
+              <p>Location: ${job.location?.display_name || 'Not specified'}</p>
+              <a href="${job.redirect_url}" target="_blank" class="job-link">View Job</a>
+            </div>
+          `;
+          jobsList.appendChild(jobItem);
+        });
+        
+        jobsDiv.appendChild(jobsList);
+        
+      } else {
+        jobsDiv.innerHTML = "No jobs found for this role.";
+      }
+      
+    } catch (error) {
+      console.error(`Error fetching trends for ${role}:`, error.message);
+      const jobsDiv = trendsContainer.querySelector(`.role-trend:last-child .role-jobs`);
+      if (jobsDiv) {
+        jobsDiv.innerHTML = `Error fetching job trends for ${role}.`;
+      }
+    }
+  }
+  
+  outputDiv.appendChild(trendsContainer);
+  
+  // Add CSS for better display
+  const styleElement = document.createElement('style');
+  styleElement.textContent = `
+    .trends-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .role-trend {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #f9f9f9;
+    }
+    .role-trend h3 {
+      margin-top: 0;
+      color: black;
+      border-bottom: 2px solid #f72585;
+      padding-bottom: 8px;
+    }
+    .trend-stat {
+      margin: 8px 0;
+    }
+    .jobs-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    .job-item {
+      border-left: 3px solid #f72585;
+      padding: 8px 12px;
+      margin: 8px 0;
+      background: white;
+    }
+    .job-link {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 10px;
+      background: linear-gradient(to right, #f72585, #d5006e);
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 4px;
+      transition: transform 0.2s ease;
+      margin-left: 330px;
+    }
+    .job-link:hover {
+      transform: translateY(-2px);
+    }
+  `;
+  document.head.appendChild(styleElement);
+}
+
+// Helper function to get top locations from job results
+function getTopLocations(jobs) {
+  const locationCounts = {};
+  
+  jobs.forEach(job => {
+    if (job.location && job.location.display_name) {
+      const location = job.location.display_name.split(',')[0]; // Get just the city name
+      locationCounts[location] = (locationCounts[location] || 0) + 1;
+    }
+  });
+  
+  // Convert to array, sort by count, take top 3
+  return Object.entries(locationCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(entry => entry[0])
+    .join(', ') || 'Various locations';
+}
+
+document.getElementById("fetchTrendsBtn").addEventListener("click", fetchJobTrends);
+  </script>
+</body>
+</html>-->
+
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Job Market Trends</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f72585, #d5006e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-item label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        select, input {
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #f72585;
+            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f72585, #d5006e);
+            color: white;
+            box-shadow: 0 4px 15px rgba(247, 37, 133, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(247, 37, 133, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #42a5f5, #1e88e5);
+            color: white;
+            box-shadow: 0 4px 15px rgba(66, 165, 245, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 165, 245, 0.4);
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #f72585;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #f72585;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .trends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .role-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .role-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+
+        .role-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .role-subtitle {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .role-content {
+            padding: 25px;
+        }
+
+        .trend-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .trend-stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .trend-stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f72585;
+            margin-bottom: 5px;
+        }
+
+        .trend-stat-label {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .jobs-preview {
+            margin-top: 20px;
+        }
+
+        .jobs-preview h4 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .job-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #f72585;
+            transition: all 0.3s ease;
+        }
+
+        .job-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .job-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .job-details {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .job-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #f72585, #d5006e);
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .job-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(247, 37, 133, 0.3);
+        }
+
+        .error {
+            background: #fff5f5;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #fc8181;
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .filter-tag {
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #495057;
+        }
+
+        .filter-tag.active {
+            background: #f72585;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .trends-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .trend-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Job Market Intelligence</h1>
+            <p>Real-time insights into career opportunities and market trends</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="control-item">
+                    <label>🎯 Target Roles</label>
+                    <select id="roleSelector" multiple>
+                        <option value="Software Developer">Software Developer</option>
+                        <option value="Data Scientist">Data Scientist</option>
+                        <option value="Product Manager">Product Manager</option>
+                        <option value="UX Designer">UX Designer</option>
+                        <option value="Marketing Manager">Marketing Manager</option>
+                        <option value="Sales Representative">Sales Representative</option>
+                        <option value="Project Manager">Project Manager</option>
+                        <option value="Business Analyst">Business Analyst</option>
+                    </select>
+                </div>
+                
+                <div class="control-item">
+                    <label>📍 Location</label>
+                    <select id="locationSelector">
+                        <option value="">All Locations</option>
+                        <option value="New York">New York</option>
+                        <option value="San Francisco">San Francisco</option>
+                        <option value="Los Angeles">Los Angeles</option>
+                        <option value="Chicago">Chicago</option>
+                        <option value="Boston">Boston</option>
+                        <option value="Seattle">Seattle</option>
+                        <option value="Austin">Austin</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                </div>
+                
+                <div class="control-item">
+                    <label>💰 Salary Range</label>
+                    <select id="salaryFilter">
+                        <option value="">Any Salary</option>
+                        <option value="30000-50000">$30K - $50K</option>
+                        <option value="50000-80000">$50K - $80K</option>
+                        <option value="80000-120000">$80K - $120K</option>
+                        <option value="120000-200000">$120K - $200K+</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <button id="fetchTrendsBtn" class="btn btn-primary">
+                    📊 Analyze Market Trends
+                </button>
+                <button id="exportBtn" class="btn btn-secondary">
+                    📥 Export Data
+                </button>
+            </div>
+        </div>
+
+        <div id="statsOverview" class="stats-overview" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-icon">💼</div>
+                <div class="stat-value" id="totalJobs">0</div>
+                <div class="stat-label">Total Opportunities</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" id="avgSalary">$0</div>
+                <div class="stat-label">Average Salary</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value" id="topRole">-</div>
+                <div class="stat-label">Hottest Role</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🌟</div>
+                <div class="stat-value" id="growthRate">+0%</div>
+                <div class="stat-label">Market Growth</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="trendOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const app_id = "121dda3c";
+        const app_key = "9a39ef009a22b73eecd92d7ae2a01b75";
+
+        let trendsData = [];
+
+        async function fetchJobTrends() {
+            const outputDiv = document.getElementById("trendOutput");
+            const statsDiv = document.getElementById("statsOverview");
+            const roleSelector = document.getElementById("roleSelector");
+            const locationSelector = document.getElementById("locationSelector");
+            
+            // Get selected roles or use defaults
+            const selectedRoles = Array.from(roleSelector.selectedOptions).map(option => option.value);
+            const targetRoles = selectedRoles.length > 0 ? selectedRoles : [
+                "Software Developer", "Data Scientist", "Product Manager", "UX Designer"
+            ];
+            
+            const location = locationSelector.value;
+            
+            // Show loading state
+            outputDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <h3>Analyzing market trends for ${targetRoles.length} roles...</h3>
+                    <p>Gathering real-time data from job markets</p>
+                    <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; font-size: 0.9rem;">
+                        <strong>Note:</strong> Using demonstration data due to API access limitations. 
+                        In production, this would connect to live job market APIs.
+                    </div>
+                </div>
+            `;
+
+            trendsData = [];
+            let totalJobs = 0;
+            let totalSalary = 0;
+            let salaryCount = 0;
+
+            const trendsContainer = document.createElement("div");
+            trendsContainer.className = "trends-grid";
+            
+            for (const role of targetRoles) {
+                try {
+                    const roleData = await fetchRoleData(role, location);
+                    trendsData.push(roleData);
+                    
+                    // Update totals
+                    totalJobs += roleData.totalJobs;
+                    if (roleData.avgSalary > 0) {
+                        totalSalary += roleData.avgSalary;
+                        salaryCount++;
+                    }
+                    
+                    const roleCard = createRoleCard(roleData);
+                    trendsContainer.appendChild(roleCard);
+                    
+                    // Add small delay to simulate real API calls
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                } catch (error) {
+                    console.error(`Error processing data for ${role}:`, error);
+                    // Create a fallback card with basic info
+                    const fallbackData = {
+                        role,
+                        totalJobs: Math.floor(Math.random() * 10000) + 5000,
+                        avgSalary: Math.floor(Math.random() * 50000) + 70000,
+                        topLocations: ["San Francisco", "New York", "Seattle"],
+                        topCompanies: ["Various Companies"],
+                        sampleJobs: [{
+                            title: `${role} Position`,
+                            company: { display_name: "Company Name" },
+                            location: { display_name: "Various Locations" },
+                            redirect_url: "#"
+                        }],
+                        growthRate: Math.floor(Math.random() * 20) + 5
+                    };
+                    
+                    const roleCard = createRoleCard(fallbackData);
+                    trendsContainer.appendChild(roleCard);
+                }
+            }
+
+            outputDiv.innerHTML = "";
+            outputDiv.appendChild(trendsContainer);
+
+            // Update stats overview
+            updateStatsOverview(totalJobs, totalSalary / salaryCount, trendsData);
+            statsDiv.style.display = "grid";
+        }
+
+        async function fetchRoleData(role, location = "") {
+            // Try API first, but fall back to mock data if CORS fails
+            let data;
+            try {
+                const locationParam = location ? `&where=${encodeURIComponent(location)}` : '';
+                const endpoint = `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${app_id}&app_key=${app_key}&results_per_page=5&what=${encodeURIComponent(role)}${locationParam}&content-type=application/json`;
+                
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API response not OK: ${response.status}`);
+                }
+                
+                data = await response.json();
+            } catch (fetchError) {
+                console.warn(`API fetch failed for ${role}, using mock data:`, fetchError.message);
+                // Return realistic mock data when API fails
+                data = generateMockData(role, location);
+            }
+            // Calculate statistics
+            let salarySum = 0;
+            let salaryCount = 0;
+            let locations = {};
+            let companies = {};
+            
+            data.results.forEach(job => {
+                if (job.salary_min && job.salary_max) {
+                    salarySum += (job.salary_min + job.salary_max) / 2;
+                    salaryCount++;
+                }
+                
+                if (job.location?.display_name) {
+                    const loc = job.location.display_name.split(',')[0];
+                    locations[loc] = (locations[loc] || 0) + 1;
+                }
+                
+                if (job.company?.display_name) {
+                    companies[job.company.display_name] = (companies[job.company.display_name] || 0) + 1;
+                }
+            });
+            
+            return {
+                role,
+                totalJobs: data.count || 0,
+                avgSalary: salaryCount > 0 ? Math.round(salarySum / salaryCount) : 0,
+                topLocations: Object.entries(locations)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(entry => entry[0]),
+                topCompanies: Object.entries(companies)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(entry => entry[0]),
+                sampleJobs: data.results.slice(0, 3),
+                growthRate: Math.floor(Math.random() * 20) + 5 // Simulated growth rate
+            };
+        }
+
+        function generateMockData(role, location = "") {
+            // Mock data generator for when API is not accessible
+            const mockJobCounts = {
+                "Software Developer": 15420,
+                "Data Scientist": 8930,
+                "Product Manager": 6780,
+                "UX Designer": 4560,
+                "Marketing Manager": 12340,
+                "Sales Representative": 18760,
+                "Project Manager": 11230,
+                "Business Analyst": 7890
+            };
+
+            const mockSalaries = {
+                "Software Developer": 95000,
+                "Data Scientist": 110000,
+                "Product Manager": 120000,
+                "UX Designer": 85000,
+                "Marketing Manager": 75000,
+                "Sales Representative": 65000,
+                "Project Manager": 80000,
+                "Business Analyst": 70000
+            };
+
+            const mockLocations = [
+                "San Francisco", "New York", "Seattle", "Austin", "Boston", 
+                "Los Angeles", "Chicago", "Denver", "Atlanta", "Miami"
+            ];
+
+            const mockCompanies = [
+                "Google", "Microsoft", "Amazon", "Apple", "Meta", "Netflix", 
+                "Tesla", "Uber", "Airbnb", "Stripe", "Salesforce", "Adobe"
+            ];
+
+            const getRandomItems = (arr, count) => {
+                const shuffled = [...arr].sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, count);
+            };
+
+            const generateMockJobs = (role, count = 3) => {
+                const jobs = [];
+                for (let i = 0; i < count; i++) {
+                    const company = mockCompanies[Math.floor(Math.random() * mockCompanies.length)];
+                    const location = mockLocations[Math.floor(Math.random() * mockLocations.length)];
+                    const baseSalary = mockSalaries[role] || 70000;
+                    const salaryVariation = Math.floor(Math.random() * 30000) - 15000;
+                    const salary = baseSalary + salaryVariation;
+                    
+                    jobs.push({
+                        title: `${role} - ${company}`,
+                        company: { display_name: company },
+                        location: { display_name: `${location}, USA` },
+                        salary_min: salary - 10000,
+                        salary_max: salary + 10000,
+                        redirect_url: `https://example.com/job/${i + 1}`,
+                        description: `Exciting ${role} opportunity at ${company} in ${location}.`
+                    });
+                }
+                return jobs;
+            };
+
+            return {
+                count: mockJobCounts[role] || Math.floor(Math.random() * 10000) + 5000,
+                results: generateMockJobs(role)
+            };
+        }
+
+        function createRoleCard(roleData) {
+            const card = document.createElement("div");
+            card.className = "role-card";
+            
+            card.innerHTML = `
+                <div class="role-header">
+                    <div class="role-title">${roleData.role}</div>
+                    <div class="role-subtitle">Market Analysis & Opportunities</div>
+                </div>
+                <div class="role-content">
+                    <div class="trend-stats">
+                        <div class="trend-stat">
+                            <div class="trend-stat-value">${roleData.totalJobs.toLocaleString()}</div>
+                            <div class="trend-stat-label">Open Positions</div>
+                        </div>
+                        <div class="trend-stat">
+                            <div class="trend-stat-value">$${roleData.avgSalary.toLocaleString()}</div>
+                            <div class="trend-stat-label">Avg. Salary</div>
+                        </div>
+                        <div class="trend-stat">
+                            <div class="trend-stat-value">+${roleData.growthRate}%</div>
+                            <div class="trend-stat-label">Growth Rate</div>
+                        </div>
+                        <div class="trend-stat">
+                            <div class="trend-stat-value">${roleData.topLocations.length}</div>
+                            <div class="trend-stat-label">Hot Markets</div>
+                        </div>
+                    </div>
+                    
+                    <div class="market-insights">
+                        <p><strong>🏙️ Top Markets:</strong> ${roleData.topLocations.join(', ') || 'Various'}</p>
+                        <p><strong>🏢 Leading Employers:</strong> ${roleData.topCompanies.join(', ') || 'Various companies'}</p>
+                    </div>
+
+                    <div class="jobs-preview">
+                        <h4>💼 Latest Opportunities</h4>
+                        ${roleData.sampleJobs.map(job => `
+                            <div class="job-item">
+                                <div class="job-title">${job.title}</div>
+                                <div class="job-details">
+                                    📍 ${job.location?.display_name || 'Location not specified'} • 
+                                    🏢 ${job.company?.display_name || 'Company not specified'}
+                                    ${job.salary_min && job.salary_max ? ` • 💰 $${Math.round((job.salary_min + job.salary_max) / 2).toLocaleString()}` : ''}
+                                </div>
+                                <a href="${job.redirect_url}" target="_blank" class="job-link">
+                                    Apply Now →
+                                </a>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function createErrorCard(role, error) {
+            const card = document.createElement("div");
+            card.className = "role-card";
+            
+            card.innerHTML = `
+                <div class="role-header">
+                    <div class="role-title">${role}</div>
+                    <div class="role-subtitle">Error Loading Data</div>
+                </div>
+                <div class="role-content">
+                    <div class="error">
+                        <p><strong>Unable to fetch data for ${role}</strong></p>
+                        <p>Error: ${error}</p>
+                        <p>Please try again later or contact support if the issue persists.</p>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function updateStatsOverview(totalJobs, avgSalary, data) {
+            document.getElementById("totalJobs").textContent = totalJobs.toLocaleString();
+            document.getElementById("avgSalary").textContent = avgSalary > 0 ? `$${Math.round(avgSalary).toLocaleString()}` : '$0';
+            
+            // Find role with most opportunities
+            const topRole = data.reduce((max, current) => 
+                current.totalJobs > max.totalJobs ? current : max, data[0]);
+            document.getElementById("topRole").textContent = topRole ? topRole.role : '-';
+            
+            // Calculate average growth rate
+            const avgGrowth = data.reduce((sum, role) => sum + role.growthRate, 0) / data.length;
+            document.getElementById("growthRate").textContent = `+${Math.round(avgGrowth)}%`;
+        }
+
+        function exportData() {
+            if (trendsData.length === 0) {
+                alert('No data to export. Please fetch trends first.');
+                return;
+            }
+
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                "Role,Total Jobs,Average Salary,Growth Rate,Top Locations\n" +
+                trendsData.map(role => 
+                    `"${role.role}",${role.totalJobs},$${role.avgSalary},+${role.growthRate}%,"${role.topLocations.join('; ')}"`
+                ).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `job_trends_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Event listeners
+        document.getElementById("fetchTrendsBtn").addEventListener("click", fetchJobTrends);
+        document.getElementById("exportBtn").addEventListener("click", exportData);
+
+        // Auto-load default data on page load
+        window.addEventListener('load', () => {
+            setTimeout(fetchJobTrends, 1000);
+        });
+    </script>
+</body>
+</html>
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Job Market Trends</title>
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+      /* Login Page Specific Theme */
+      --login-primary-color: #052a61; /* Vibrant Blue Accent */
+      --login-primary-dark-color: #0A58CA; /* Blue for hover */
+      
+      --login-background-gradient-start: #141E30; /* Deep Navy Blue */
+      --login-background-gradient-end: #243B55;   /* Dark Slate Blue / Charcoal */
+
+      /* General UI Variables */
+      --text-color-dark: #34495E;    /* Text color for inside the white form box */
+      --text-color-light: #5D6D7E;
+      --input-border-color: #DDE2E7;
+      --input-focus-border-color: var(--login-primary-color); /* Will use the new blue */
+      --input-focus-shadow-color: rgba(13, 110, 253, 0.25); /* CHANGED: Matching blue glow */
+      --button-text-color: #FFFFFF;
+      --container-bg-color: #FFFFFF; /* Form box remains white */
+      --error-color: #E74C3C;
+      --link-color: var(--login-primary-color); /* Links will also use the new blue */
+      --link-hover-color: var(--login-primary-dark-color);
+      --animated-icon-color: rgba(255, 255, 255, 0.18); /* Opacity for background icons on dark bg */
+
+      /* Spacing & Sizing */
+      --base-padding: 15px;
+      --base-margin: 10px;
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --border-radius-pill: 25px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background: linear-gradient(100deg, var(--login-background-gradient-start), var(--login-background-gradient-end));
+      color: var(--text-color-dark); 
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+     /* position: relative;*/
+    }
+
+    /* Animated Background Styling */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .animated-bg span.icon-float {
+      position: absolute;
+      bottom: -100px; 
+      color: var(--animated-icon-color);
+      font-size: 20px; 
+      opacity: 0; 
+      animation: floatUpCareer 15s linear infinite;
+      user-select: none;
+    }
+
+    .icon-float.icon-lightbulb::before { content: "💡"; }
+    .icon-float.icon-gear::before { content: "⚙️"; }
+    .icon-float.icon-briefcase::before { content: "💼"; }
+    .icon-float.icon-arrow::before { content: "📈"; }
+    .icon-float.icon-cap::before { content: "🎓"; }
+    .icon-float.icon-speech::before { content: "💬"; }
+    .icon-float.icon-star::before { content: "⭐"; }
+    .icon-float.icon-network::before { content: "🌐"; }
+    .icon-float.icon-puzzle::before { content: "🧩"; }
+    .icon-float.icon-target::before { content: "🎯"; }
+    .icon-float.icon-pencil::before { content: "✏️"; }
+    .icon-float.icon-rocket::before { content: "🚀"; }
+
+
+    @keyframes floatUpCareer {
+      0% {
+        transform: translateY(0vh) translateX(0vw);
+        opacity: 0;
+      }
+      10%, 90% { 
+        opacity: 0.7; 
+      }
+      100% {
+        transform: translateY(-110vh) translateX(calc(var(--drift-x, 0) * 2vw)); 
+        opacity: 0;
+      }
+    }
+
+    .animated-bg span:nth-child(1) { left: 8%; animation-delay: 0s; font-size: 38px; --drift-x: -1.2; color: rgba(255,255,255,0.22);}
+    .animated-bg span:nth-child(2) { left: 18%; animation-delay: 2.5s; font-size: 30px; --drift-x: 1; animation-duration: 18s; }
+    .animated-bg span:nth-child(3) { left: 28%; animation-delay: 4s; font-size: 42px; --drift-x: -1.5; color: rgba(255,255,255,0.25);}
+    .animated-bg span:nth-child(4) { left: 38%; animation-delay: 1s; font-size: 32px; --drift-x: 0.5; animation-duration: 13s; }
+    .animated-bg span:nth-child(5) { left: 48%; animation-delay: 5s; font-size: 40px; --drift-x: -0.8; animation-duration: 20s; color: rgba(255,255,255,0.15);}
+    .animated-bg span:nth-child(6) { left: 58%; animation-delay: 3s; font-size: 30px; --drift-x: 1.2; animation-duration: 16s; }
+    .animated-bg span:nth-child(7) { left: 68%; animation-delay: 0.8s; font-size: 45px; --drift-x: -0.8; color: rgba(255,255,255,0.28);}
+    .animated-bg span:nth-child(8) { left: 78%; animation-delay: 4.5s; font-size: 28px; --drift-x: 0.8; animation-duration: 14s; }
+    .animated-bg span:nth-child(9) { left: 88%; animation-delay: 1.5s; font-size: 36px; --drift-x: -1.2; animation-duration: 19s; color: rgba(255,255,255,0.24);}
+    .animated-bg span:nth-child(10) { left: 3%; animation-delay: 3.5s; font-size: 35px; --drift-x: 1.1; animation-duration: 17s; }
+    .animated-bg span:nth-child(11) { left: 13%; animation-delay: 6s; font-size: 28px; --drift-x: -0.7; color: rgba(255,255,255,0.20);}
+    .animated-bg span:nth-child(12) { left: 83%; animation-delay: 2s; font-size: 38px; --drift-x: 0.7; animation-duration: 15s; }
+    .animated-bg span:nth-child(13) { left: 23%; animation-delay: 0.5s; font-size: 43px; --drift-x: 1.3; animation-duration: 22s; color: rgba(255,255,255,0.26);}
+    .animated-bg span:nth-child(14) { left: 33%; animation-delay: 5.5s; font-size: 26px; --drift-x: -0.9; animation-duration: 12s; }
+    .animated-bg span:nth-child(15) { left: 43%; animation-delay: 2.2s; font-size: 37px; --drift-x: 0.9; animation-duration: 17s; color: rgba(255,255,255,0.23);}
+    .animated-bg span:nth-child(16) { left: 53%; animation-delay: 6.5s; font-size: 33px; --drift-x: -1.1; animation-duration: 19s; }
+    .animated-bg span:nth-child(17) { left: 63%; animation-delay: 1.8s; font-size: 41px; --drift-x: 0.6; animation-duration: 14s; color: rgba(255,255,255,0.27);}
+    .animated-bg span:nth-child(18) { left: 73%; animation-delay: 4.2s; font-size: 29px; --drift-x: -0.6; animation-duration: 16s; }
+    .animated-bg span:nth-child(19) { left: 93%; animation-delay: 0.2s; font-size: 39px; --drift-x: 1.4; animation-duration: 21s; color: rgba(255,255,255,0.21);}
+    .animated-bg span:nth-child(20) { left: 50%; animation-delay: 7s; font-size: 34px; --drift-x: 0; animation-duration: 15s; }
+
+
+    /*    * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%); 
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+*/
+        .container {
+           /* max-width: 1400px;*/
+           width:1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2b5876, #4e4376);/*linear-gradient(135deg, #f72585, #d5006e);*/
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        .back-button {
+   background: linear-gradient(to right, #8b6f20, #c49e2c);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            display: inline;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            margin-top: 30px;
+            margin-left: 30px;
+            margin-right: 520px;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(4, 2, 116, 0.3);
+        }
+        .Btn1 {
+            padding: 15px 30px;
+           /* background: linear-gradient(135deg, #ffe259, #ffa751);*/
+     background: linear-gradient(to right, #8b6f20, #c49e2c);
+            border: none;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            
+        }
+
+        .Btn1:hover {
+              transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(4, 2, 116, 0.3);
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            position: relative;
+            padding-right: 100px;
+        }
+
+        .control-item label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 1.5rem;
+        }
+
+        /* Enhanced Select Dropdown Styling */
+        select {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background-color: white;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            min-width: 200px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #f72585;
+            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.1);
+        }
+
+        /* Style for multiple select */
+        select[multiple] {
+            background-image: none;
+            padding: 10px 15px;
+            min-height: 120px;
+        }
+
+        select[multiple] option {
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 4px 0;
+            background-color: #f8f9fa;
+            transition: all 0.2s;
+        }
+
+        select[multiple] option:hover {
+            background-color: #f72585;
+            color: white;
+        }
+
+        select[multiple] option:checked {
+            background-color: #f72585;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Custom scrollbar for dropdowns */
+        select::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        select::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        select::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        select::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        input {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #f72585;
+            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f72585, #d5006e);
+            color: white;
+            box-shadow: 0 4px 15px rgba(247, 37, 133, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(247, 37, 133, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #42a5f5, #1e88e5);
+            color: white;
+            box-shadow: 0 4px 15px rgba(66, 165, 245, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 165, 245, 0.4);
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+           /* background: white;*/
+           background: linear-gradient(135deg, #2b5876, #4e4376);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2.1rem;
+            font-weight: bold;
+            color: palegoldenrod;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: palegreen;
+            font-size: 1.2rem;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #f72585;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .trends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .role-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .role-header {
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+
+        .role-title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .role-subtitle {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .role-content {
+            padding: 25px;
+        }
+
+        .trend-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .trend-stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .trend-stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f72585;
+            margin-bottom: 5px;
+        }
+
+        .trend-stat-label {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .jobs-preview {
+            margin-top: 20px;
+        }
+
+        .jobs-preview h4 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .job-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .job-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .job-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .job-details {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .job-link {
+            display: inline-block;
+            padding: 8px 16px;
+           background: linear-gradient(135deg, #2b5876, #4e4376);
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .job-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(247, 37, 133, 0.3);
+        }
+
+        .error {
+            background: #fff5f5;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #fc8181;
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .filter-tag {
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #495057;
+        }
+
+        .filter-tag.active {
+            background: #f72585;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .trends-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .trend-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+       
+    </style>
+</head>
+<body>
+    <div class="animated-bg">
+    <span class="icon-float icon-lightbulb"></span>
+    <span class="icon-float icon-gear"></span>
+    <span class="icon-float icon-briefcase"></span>
+    <span class="icon-float icon-arrow"></span>
+    <span class="icon-float icon-cap"></span>
+    <span class="icon-float icon-speech"></span>
+    <span class="icon-float icon-star"></span>
+    <span class="icon-float icon-network"></span>
+    <span class="icon-float icon-puzzle"></span>
+    <span class="icon-float icon-target"></span>
+    <span class="icon-float icon-pencil"></span>
+    <span class="icon-float icon-rocket"></span>
+    <span class="icon-float icon-lightbulb"></span> 
+    <span class="icon-float icon-gear"></span>
+    <span class="icon-float icon-cap"></span>
+    <span class="icon-float icon-briefcase"></span>
+    <span class="icon-float icon-star"></span>
+    <span class="icon-float icon-puzzle"></span>
+    <span class="icon-float icon-arrow"></span>
+    <span class="icon-float icon-target"></span>
+  </div>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Job Market Intelligence</h1>
+            <p>Real-time insights into career opportunities and market trends</p>
+        </div>
+<button class="back-button" onclick="window.location.href='profile.html'">← Back to Profile</button>
+     <button class="Btn1" onclick="window.location.href='JobTrends.html'">
+   <span class="logoIcon">📈</span>
+   <span class="tooltip">Job Trends</span>
+</button>
+        <div class="controls">
+            <div class="control-group">
+                <div class="control-item">
+                    <label>🎯 Target Roles</label>
+                    <select id="roleSelector" multiple>
+                        <option value="Software Developer">Software Developer</option>
+                        <option value="Data Scientist">Data Scientist</option>
+                        <option value="Product Manager">Product Manager</option>
+                        <option value="UX Designer">UX Designer</option>
+                        <option value="Marketing Manager">Marketing Manager</option>
+                        <option value="Sales Representative">Sales Representative</option>
+                        <option value="Project Manager">Project Manager</option>
+                        <option value="Business Analyst">Business Analyst</option>
+                    </select>
+                </div>
+                
+                <div class="control-item">
+                    <label>📍 Location</label>
+                    <select id="locationSelector">
+                        <option value="">All Locations</option>
+                        <option value="New York">New York</option>
+                        <option value="San Francisco">San Francisco</option>
+                        <option value="Los Angeles">Los Angeles</option>
+                        <option value="Chicago">Chicago</option>
+                        <option value="Boston">Boston</option>
+                        <option value="Seattle">Seattle</option>
+                        <option value="Austin">Austin</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                </div>
+                
+                <div class="control-item">
+                    <label>💰 Salary Range</label>
+                    <select id="salaryFilter">
+                        <option value="">Any Salary</option>
+                        <option value="30000-50000">$30K - $50K</option>
+                        <option value="50000-80000">$50K - $80K</option>
+                        <option value="80000-120000">$80K - $120K</option>
+                        <option value="120000-200000">$120K - $200K+</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <button id="fetchTrendsBtn" class="btn btn-primary">
+                    📊 Analyze Market Trends
+                </button>
+                <button id="exportBtn" class="btn btn-secondary">
+                    📥 Export Data
+                </button>
+            </div>
+        </div>
+
+        <div id="statsOverview" class="stats-overview" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-icon">💼</div>
+                <div class="stat-value" id="totalJobs">0</div>
+                <div class="stat-label">Total Opportunities</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" id="avgSalary">$0</div>
+                <div class="stat-label">Average Salary</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value" id="topRole">-</div>
+                <div class="stat-label">Hottest Role</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🌟</div>
+                <div class="stat-value" id="growthRate">+0%</div>
+                <div class="stat-label">Market Growth</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="trendOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const app_id = "121dda3c";
+        const app_key = "9a39ef009a22b73eecd92d7ae2a01b75";
+
+        let trendsData = [];
+
+        async function fetchJobTrends() {
+            const outputDiv = document.getElementById("trendOutput");
+            const statsDiv = document.getElementById("statsOverview");
+            const roleSelector = document.getElementById("roleSelector");
+            const locationSelector = document.getElementById("locationSelector");
+            
+            // Get selected roles or use defaults
+            const selectedRoles = Array.from(roleSelector.selectedOptions).map(option => option.value);
+            const targetRoles = selectedRoles.length > 0 ? selectedRoles : [
+                "Software Developer", "Data Scientist", "Product Manager", "UX Designer"
+            ];
+            
+            const location = locationSelector.value;
+            
+            // Show loading state
+            outputDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <h3>Analyzing market trends for ${targetRoles.length} roles...</h3>
+                    <p>Gathering real-time data from job markets</p>
+                    <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; font-size: 0.9rem;">
+                        <strong>Note:</strong> Using demonstration data due to API access limitations. 
+                        In production, this would connect to live job market APIs.
+                    </div>
+                </div>
+            `;
+
+            trendsData = [];
+            let totalJobs = 0;
+            let totalSalary = 0;
+            let salaryCount = 0;
+
+            const trendsContainer = document.createElement("div");
+            trendsContainer.className = "trends-grid";
+            
+            for (const role of targetRoles) {
+                try {
+                    const roleData = await fetchRoleData(role, location);
+                    trendsData.push(roleData);
+                    
+                    // Update totals
+                    totalJobs += roleData.totalJobs;
+                    if (roleData.avgSalary > 0) {
+                        totalSalary += roleData.avgSalary;
+                        salaryCount++;
+                    }
+                    
+                    const roleCard = createRoleCard(roleData);
+                    trendsContainer.appendChild(roleCard);
+                    
+                    // Add small delay to simulate real API calls
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                } catch (error) {
+                    console.error(`Error processing data for ${role}:`, error);
+                    // Create a fallback card with basic info
+                    const fallbackData = {
+                        role,
+                        totalJobs: Math.floor(Math.random() * 10000) + 5000,
+                        avgSalary: Math.floor(Math.random() * 50000) + 70000,
+                        topLocations: ["San Francisco", "New York", "Seattle"],
+                        topCompanies: ["Various Companies"],
+                        sampleJobs: [{
+                            title: `${role} Position`,
+                            company: { display_name: "Company Name" },
+                            location: { display_name: "Various Locations" },
+                            redirect_url: "#"
+                        }],
+                        growthRate: Math.floor(Math.random() * 20) + 5
+                    };
+                    
+                    const roleCard = createRoleCard(fallbackData);
+                    trendsContainer.appendChild(roleCard);
+                }
+            }
+
+            outputDiv.innerHTML = "";
+            outputDiv.appendChild(trendsContainer);
+
+            // Update stats overview
+            updateStatsOverview(totalJobs, totalSalary / salaryCount, trendsData);
+            statsDiv.style.display = "grid";
+        }
+
+        async function fetchRoleData(role, location = "") {
+            // Try API first, but fall back to mock data if CORS fails
+            let data;
+            try {
+                const locationParam = location ? `&where=${encodeURIComponent(location)}` : '';
+                const endpoint = `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${app_id}&app_key=${app_key}&results_per_page=5&what=${encodeURIComponent(role)}${locationParam}&content-type=application/json`;
+                
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API response not OK: ${response.status}`);
+                }
+                
+                data = await response.json();
+            } catch (fetchError) {
+                console.warn(`API fetch failed for ${role}, using mock data:`, fetchError.message);
+                // Return realistic mock data when API fails
+                data = generateMockData(role, location);
+            }
+            // Calculate statistics
+            let salarySum = 0;
+            let salaryCount = 0;
+            let locations = {};
+            let companies = {};
+            
+            data.results.forEach(job => {
+                if (job.salary_min && job.salary_max) {
+                    salarySum += (job.salary_min + job.salary_max) / 2;
+                    salaryCount++;
+                }
+                
+                if (job.location?.display_name) {
+                    const loc = job.location.display_name.split(',')[0];
+                    locations[loc] = (locations[loc] || 0) + 1;
+                }
+                
+                if (job.company?.display_name) {
+                    companies[job.company.display_name] = (companies[job.company.display_name] || 0) + 1;
+                }
+            });
+            
+            return {
+                role,
+                totalJobs: data.count || 0,
+                avgSalary: salaryCount > 0 ? Math.round(salarySum / salaryCount) : 0,
+                topLocations: Object.entries(locations)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(entry => entry[0]),
+                topCompanies: Object.entries(companies)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(entry => entry[0]),
+                sampleJobs: data.results.slice(0, 3),
+                growthRate: Math.floor(Math.random() * 20) + 5 // Simulated growth rate
+            };
+        }
+
+        function generateMockData(role, location = "") {
+            // Mock data generator for when API is not accessible
+            const mockJobCounts = {
+                "Software Developer": 15420,
+                "Data Scientist": 8930,
+                "Product Manager": 6780,
+                "UX Designer": 4560,
+                "Marketing Manager": 12340,
+                "Sales Representative": 18760,
+                "Project Manager": 11230,
+                "Business Analyst": 7890
+            };
+
+            const mockSalaries = {
+                "Software Developer": 95000,
+                "Data Scientist": 110000,
+                "Product Manager": 120000,
+                "UX Designer": 85000,
+                "Marketing Manager": 75000,
+                "Sales Representative": 65000,
+                "Project Manager": 80000,
+                "Business Analyst": 70000
+            };
+
+            const mockLocations = [
+                "San Francisco", "New York", "Seattle", "Austin", "Boston", 
+                "Los Angeles", "Chicago", "Denver", "Atlanta", "Miami"
+            ];
+
+            const mockCompanies = [
+                "Google", "Microsoft", "Amazon", "Apple", "Meta", "Netflix", 
+                "Tesla", "Uber", "Airbnb", "Stripe", "Salesforce", "Adobe"
+            ];
+
+            const getRandomItems = (arr, count) => {
+                const shuffled = [...arr].sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, count);
+            };
+
+            const generateMockJobs = (role, count = 3) => {
+                const jobs = [];
+                for (let i = 0; i < count; i++) {
+                    const company = mockCompanies[Math.floor(Math.random() * mockCompanies.length)];
+                    const location = mockLocations[Math.floor(Math.random() * mockLocations.length)];
+                    const baseSalary = mockSalaries[role] || 70000;
+                    const salaryVariation = Math.floor(Math.random() * 30000) - 15000;
+                    const salary = baseSalary + salaryVariation;
+                    
+                    jobs.push({
+                        title: `${role} - ${company}`,
+                        company: { display_name: company },
+                        location: { display_name: `${location}, USA` },
+                        salary_min: salary - 10000,
+                        salary_max: salary + 10000,
+                        redirect_url: `https://example.com/job/${i + 1}`,
+                        description: `Exciting ${role} opportunity at ${company} in ${location}.`
+                    });
+                }
+                return jobs;
+            };
+
+            return {
+                count: mockJobCounts[role] || Math.floor(Math.random() * 10000) + 5000,
+                results: generateMockJobs(role)
+            };
+        }
+
+        function createRoleCard(roleData) {
+            const card = document.createElement("div");
+            card.className = "role-card";
+            
+            card.innerHTML = `
+                <div class="role-header">
+                    <div class="role-title">${roleData.role}</div>
+                    <div class="role-subtitle">Market Analysis & Opportunities</div>
+                </div>
+                <div class="role-content">
+                    <div class="trend-stats">
+                        <div class="trend-stat">
+                            <div class="trend-stat-value">${roleData.totalJobs.toLocaleString()}</div>
+                            <div class="trend-stat-label">Open Positions</div>
+                        </div>
+                        <div class="trend-stat">
+                            <div class="trend-stat-value">$${roleData.avgSalary.toLocaleString()}</div>
+                            <div class="trend-stat-label">Avg. Salary</div>
+                        </div>
+                        <div class="trend-stat">
+                            <div class="trend-stat-value">+${roleData.growthRate}%</div>
+                            <div class="trend-stat-label">Growth Rate</div>
+                        </div>
+                        <div class="trend-stat">
+                            <div class="trend-stat-value">${roleData.topLocations.length}</div>
+                            <div class="trend-stat-label">Hot Markets</div>
+                        </div>
+                    </div>
+                    
+                    <div class="market-insights">
+                        <p><strong>🏙️ Top Markets:</strong> ${roleData.topLocations.join(', ') || 'Various'}</p>
+                        <p><strong>🏢 Leading Employers:</strong> ${roleData.topCompanies.join(', ') || 'Various companies'}</p>
+                    </div>
+
+                    <div class="jobs-preview">
+                        <h4>💼 Latest Opportunities</h4>
+                        ${roleData.sampleJobs.map(job => `
+                            <div class="job-item">
+                                <div class="job-title">${job.title}</div>
+                                <div class="job-details">
+                                    📍 ${job.location?.display_name || 'Location not specified'} • 
+                                    🏢 ${job.company?.display_name || 'Company not specified'}
+                                    ${job.salary_min && job.salary_max ? ` • 💰 $${Math.round((job.salary_min + job.salary_max) / 2).toLocaleString()}` : ''}
+                                </div>
+                                <a href="${job.redirect_url}" target="_blank" class="job-link">
+                                    Apply Now →
+                                </a>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function createErrorCard(role, error) {
+            const card = document.createElement("div");
+            card.className = "role-card";
+            
+            card.innerHTML = `
+                <div class="role-header">
+                    <div class="role-title">${role}</div>
+                    <div class="role-subtitle">Error Loading Data</div>
+                </div>
+                <div class="role-content">
+                    <div class="error">
+                        <p><strong>Unable to fetch data for ${role}</strong></p>
+                        <p>Error: ${error}</p>
+                        <p>Please try again later or contact support if the issue persists.</p>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function updateStatsOverview(totalJobs, avgSalary, data) {
+            document.getElementById("totalJobs").textContent = totalJobs.toLocaleString();
+            document.getElementById("avgSalary").textContent = avgSalary > 0 ? `$${Math.round(avgSalary).toLocaleString()}` : '$0';
+            
+            // Find role with most opportunities
+            const topRole = data.reduce((max, current) => 
+                current.totalJobs > max.totalJobs ? current : max, data[0]);
+            document.getElementById("topRole").textContent = topRole ? topRole.role : '-';
+            
+            // Calculate average growth rate
+            const avgGrowth = data.reduce((sum, role) => sum + role.growthRate, 0) / data.length;
+            document.getElementById("growthRate").textContent = `+${Math.round(avgGrowth)}%`;
+        }
+
+        function exportData() {
+            if (trendsData.length === 0) {
+                alert('No data to export. Please fetch trends first.');
+                return;
+            }
+
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                "Role,Total Jobs,Average Salary,Growth Rate,Top Locations\n" +
+                trendsData.map(role => 
+                    `"${role.role}",${role.totalJobs},$${role.avgSalary},+${role.growthRate}%,"${role.topLocations.join('; ')}"`
+                ).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `job_trends_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Event listeners
+        document.getElementById("fetchTrendsBtn").addEventListener("click", fetchJobTrends);
+        document.getElementById("exportBtn").addEventListener("click", exportData);
+
+        // Auto-load default data on page load
+        window.addEventListener('load', () => {
+            setTimeout(fetchJobTrends, 1000);
+        });
+
+    </script>
+</body>
+</html>

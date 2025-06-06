@@ -1,0 +1,16 @@
+com\Manasvi\Career\model\CareerInput.class
+com\Manasvi\Career\model\User.class
+com\Manasvi\Career\CareerAdvisorApplication.class
+com\Manasvi\Career\controller\CareerController$AdviceRequest.class
+com\Manasvi\Career\repository\CareerInputRepository.class
+com\Manasvi\Career\service\CareerAdviceService.class
+com\Manasvi\Career\controller\SkillAnalysisRequest.class
+com\Manasvi\Career\controller\CareerController.class
+com\Manasvi\Career\repository\UserRepository.class
+com\Manasvi\Career\CareerAdvisorApplication$1.class
+com\Manasvi\Career\controller\UserController.class
+com\Manasvi\Career\controller\AuthController.class
+com\Manasvi\Career\CareerAdvisorController$AdviceRequest.class
+com\Manasvi\Career\CareerAdvisorController.class
+com\Manasvi\Career\controller\GoalController.class
+com\Manasvi\Career\SkillAnalysisResult.class

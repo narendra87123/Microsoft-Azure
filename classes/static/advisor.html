@@ -1,0 +1,864 @@
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Career Advisor - Get Advice</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: linear-gradient(to right, #4e54c8, #8f94fb); margin: 0; padding: 0; color: white; }
+    .container { max-width: 600px; margin: 50px auto; background: #fff; color: #000; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+    h2 { text-align: center; }
+    select, input, button { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; border-radius: 5px; }
+    button { background-color: #4e54c8; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #383dc4; }
+    .advice-box { background: #f1f1f1; color: #000; padding: 15px; margin-top: 20px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Get Your Personalized Career Advice</h2>
+    <form id="careerForm">
+      <label for="interest">Select Your Interest:</label>
+      <select id="interest" required>
+        <option value="">--Choose--</option>
+        <option value="data">Data Structures</option>
+        <option value="ai">Artificial Intelligence</option>
+        <option value="web">Web Development</option>
+        <option value="mobile">Mobile Development</option>
+        <option value="design">UI/UX Design</option>
+      </select>
+
+      <label for="experience">Years of Experience:</label>
+      <input type="number" id="experience" min="0" max="10" required />
+
+      <button type="submit">Get Advice</button>
+    </form>
+
+    <div class="advice-box" id="adviceBox" style="display: none;"></div>
+  </div>
+
+  <script>
+    const dsaAdviceMap = {
+      data: "Since you're interested in Data Structures, consider roles like Backend Developer, Algorithm Engineer, or participate in competitive programming. Learn trees, graphs, and dynamic programming deeply.",
+      ai: "With AI interest, explore Machine Learning, Deep Learning, or Data Science roles. Master linear algebra, neural networks, and tools like TensorFlow or PyTorch.",
+      web: "Web Development is booming. Focus on MERN stack (MongoDB, Express, React, Node.js) and build portfolio projects.",
+      mobile: "Mobile Development needs expertise in Flutter, Kotlin, or Swift. Build apps with responsive design.",
+      design: "UI/UX Design careers suit creative minds. Use Figma, Adobe XD, and understand user-centered design."
+    };
+
+    document.getElementById("careerForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const interest = document.getElementById("interest").value;
+      const experience = parseInt(document.getElementById("experience").value);
+      const adviceBox = document.getElementById("adviceBox");
+
+      if (interest && !isNaN(experience)) {
+        let dynamicAdvice = dsaAdviceMap[interest] || "Choose a valid interest.";
+        if (experience < 1) {
+          dynamicAdvice += " As a beginner, start with structured tutorials and small projects.";
+        } else if (experience >= 1 && experience < 3) {
+          dynamicAdvice += " With some experience, contribute to open source and build real-world apps.";
+        } else {
+          dynamicAdvice += " You're experienced! Lead projects or mentor juniors while scaling your skills.";
+        }
+        adviceBox.textContent = dynamicAdvice;
+        adviceBox.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>
+-->
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Career Advisor - Get Advice</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #4e54c8, #8f94fb);
+      margin: 0;
+      padding: 0;
+      color: white;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      color: #000;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+    h2 {
+      text-align: center;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 15px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #4e54c8;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #383dc4;
+    }
+    .advice-box {
+      background: #f1f1f1;
+      color: #000;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Get Your Personalized Career Advice</h2>
+    <form id="careerForm">
+      <label for="interest">Select Your Interest:</label>
+      <select id="interest" required>
+        <option value="">--Choose--</option>
+        <option value="data">programming</option>
+        <option value="ai">Artificial Intelligence</option>
+        <option value="web">Web Development</option>
+        <option value="mobile">Mobile Development</option>
+        <option value="design">UI/UX Design</option>
+      </select>
+
+      <label for="experience">Years of Experience:</label>
+      <input type="number" id="experience" min="0" max="10" required />
+
+      <button type="submit">Get Advice</button>
+    </form>
+
+    <div class="advice-box" id="adviceBox"></div>
+  </div>
+
+  <script>
+    document.getElementById("careerForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const interest = document.getElementById("interest").value;
+      const experience = parseInt(document.getElementById("experience").value);
+      const adviceBox = document.getElementById("adviceBox");
+
+      if (interest && !isNaN(experience)) {
+        fetch('http://localhost:8080/career/advice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: "test@example.com", // Replace with actual user email if needed
+            skills: String(experience), // Sending years of experience as skill
+            interests: interest
+          })
+        })
+        .then(response => response.text())
+        .then(data => {
+          adviceBox.textContent = data;
+          adviceBox.style.display = "block";
+           localStorage.setItem("latestAdvice", data);
+      let count = parseInt(localStorage.getItem("adviceCount") || "0");
+      localStorage.setItem("adviceCount", count + 1);
+      localStorage.setItem("skillsTracked", skills);
+        })
+        .catch(error => {
+          adviceBox.textContent = "Error getting advice.";
+          adviceBox.style.display = "block";
+          console.error('Error:', error);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Career Advisor - Get Advice</title>
+  <style>
+    :root {
+      /* Login Page Specific Theme */
+      --login-primary-color: #052a61; /* Vibrant Blue Accent */
+      --login-primary-dark-color: #0A58CA; /* Blue for hover */
+      
+      --login-background-gradient-start: #141E30; /* Deep Navy Blue */
+      --login-background-gradient-end: #243B55;   /* Dark Slate Blue / Charcoal */
+
+      /* General UI Variables */
+      --text-color-dark: #34495E;    /* Text color for inside the white form box */
+      --text-color-light: #5D6D7E;
+      --input-border-color: #DDE2E7;
+      --input-focus-border-color: var(--login-primary-color); /* Will use the new blue */
+      --input-focus-shadow-color: rgba(13, 110, 253, 0.25); /* CHANGED: Matching blue glow */
+      --button-text-color: #FFFFFF;
+      --container-bg-color: #FFFFFF; /* Form box remains white */
+      --error-color: #E74C3C;
+      --link-color: var(--login-primary-color); /* Links will also use the new blue */
+      --link-hover-color: var(--login-primary-dark-color);
+      --animated-icon-color: rgba(255, 255, 255, 0.18); /* Opacity for background icons on dark bg */
+
+      /* Spacing & Sizing */
+      --base-padding: 15px;
+      --base-margin: 10px;
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --border-radius-pill: 25px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background: linear-gradient(100deg, var(--login-background-gradient-start), var(--login-background-gradient-end));
+      color: var(--text-color-dark); 
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden; 
+      position: relative;
+    }
+
+    /* Animated Background Styling */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .animated-bg span.icon-float {
+      position: absolute;
+      bottom: -100px; 
+      color: var(--animated-icon-color);
+      font-size: 20px; 
+      opacity: 0; 
+      animation: floatUpCareer 15s linear infinite;
+      user-select: none;
+    }
+
+    .icon-float.icon-lightbulb::before { content: "💡"; }
+    .icon-float.icon-gear::before { content: "⚙️"; }
+    .icon-float.icon-briefcase::before { content: "💼"; }
+    .icon-float.icon-arrow::before { content: "📈"; }
+    .icon-float.icon-cap::before { content: "🎓"; }
+    .icon-float.icon-speech::before { content: "💬"; }
+    .icon-float.icon-star::before { content: "⭐"; }
+    .icon-float.icon-network::before { content: "🌐"; }
+    .icon-float.icon-puzzle::before { content: "🧩"; }
+    .icon-float.icon-target::before { content: "🎯"; }
+    .icon-float.icon-pencil::before { content: "✏️"; }
+    .icon-float.icon-rocket::before { content: "🚀"; }
+
+
+    @keyframes floatUpCareer {
+      0% {
+        transform: translateY(0vh) translateX(0vw);
+        opacity: 0;
+      }
+      10%, 90% { 
+        opacity: 0.7; 
+      }
+      100% {
+        transform: translateY(-110vh) translateX(calc(var(--drift-x, 0) * 2vw)); 
+        opacity: 0;
+      }
+    }
+
+    .animated-bg span:nth-child(1) { left: 8%; animation-delay: 0s; font-size: 38px; --drift-x: -1.2; color: rgba(255,255,255,0.22);}
+    .animated-bg span:nth-child(2) { left: 18%; animation-delay: 2.5s; font-size: 30px; --drift-x: 1; animation-duration: 18s; }
+    .animated-bg span:nth-child(3) { left: 28%; animation-delay: 4s; font-size: 42px; --drift-x: -1.5; color: rgba(255,255,255,0.25);}
+    .animated-bg span:nth-child(4) { left: 38%; animation-delay: 1s; font-size: 32px; --drift-x: 0.5; animation-duration: 13s; }
+    .animated-bg span:nth-child(5) { left: 48%; animation-delay: 5s; font-size: 40px; --drift-x: -0.8; animation-duration: 20s; color: rgba(255,255,255,0.15);}
+    .animated-bg span:nth-child(6) { left: 58%; animation-delay: 3s; font-size: 30px; --drift-x: 1.2; animation-duration: 16s; }
+    .animated-bg span:nth-child(7) { left: 68%; animation-delay: 0.8s; font-size: 45px; --drift-x: -0.8; color: rgba(255,255,255,0.28);}
+    .animated-bg span:nth-child(8) { left: 78%; animation-delay: 4.5s; font-size: 28px; --drift-x: 0.8; animation-duration: 14s; }
+    .animated-bg span:nth-child(9) { left: 88%; animation-delay: 1.5s; font-size: 36px; --drift-x: -1.2; animation-duration: 19s; color: rgba(255,255,255,0.24);}
+    .animated-bg span:nth-child(10) { left: 3%; animation-delay: 3.5s; font-size: 35px; --drift-x: 1.1; animation-duration: 17s; }
+    .animated-bg span:nth-child(11) { left: 13%; animation-delay: 6s; font-size: 28px; --drift-x: -0.7; color: rgba(255,255,255,0.20);}
+    .animated-bg span:nth-child(12) { left: 83%; animation-delay: 2s; font-size: 38px; --drift-x: 0.7; animation-duration: 15s; }
+    .animated-bg span:nth-child(13) { left: 23%; animation-delay: 0.5s; font-size: 43px; --drift-x: 1.3; animation-duration: 22s; color: rgba(255,255,255,0.26);}
+    .animated-bg span:nth-child(14) { left: 33%; animation-delay: 5.5s; font-size: 26px; --drift-x: -0.9; animation-duration: 12s; }
+    .animated-bg span:nth-child(15) { left: 43%; animation-delay: 2.2s; font-size: 37px; --drift-x: 0.9; animation-duration: 17s; color: rgba(255,255,255,0.23);}
+    .animated-bg span:nth-child(16) { left: 53%; animation-delay: 6.5s; font-size: 33px; --drift-x: -1.1; animation-duration: 19s; }
+    .animated-bg span:nth-child(17) { left: 63%; animation-delay: 1.8s; font-size: 41px; --drift-x: 0.6; animation-duration: 14s; color: rgba(255,255,255,0.27);}
+    .animated-bg span:nth-child(18) { left: 73%; animation-delay: 4.2s; font-size: 29px; --drift-x: -0.6; animation-duration: 16s; }
+    .animated-bg span:nth-child(19) { left: 93%; animation-delay: 0.2s; font-size: 39px; --drift-x: 1.4; animation-duration: 21s; color: rgba(255,255,255,0.21);}
+    .animated-bg span:nth-child(20) { left: 50%; animation-delay: 7s; font-size: 34px; --drift-x: 0; animation-duration: 15s; }
+
+
+   /* body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #4e54c8, #8f94fb);
+      margin: 0;
+      padding: 0;
+      color: white;
+    }*/
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      color: #000;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      z-index: 1;
+    }
+    /*  .back-button {
+      background-color: #666;
+      margin-bottom: 20px;
+    }
+    .back-button:hover {
+      background-color: #555;
+    }
+    h2 {
+      text-align: center;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 15px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+     background: linear-gradient(135deg, #141e30, #243b55);
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 10px ;
+    }
+    button:hover {
+      background-color: #383dc4;
+    }
+    .advice-box {
+      background: #f1f1f1;
+      color: #000;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 8px;
+      display: none;
+    }*/
+     .back-button {
+
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(4, 2, 116, 0.3);
+        }
+
+        h2 {
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(135deg, #cc2b5e, #753a88); /* Plum and violet */
+
+            border-radius: 2px;
+        }
+
+        #careerForm {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        select, input {
+            padding: 15px 20px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            color: #2c3e50;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        select:hover, input:hover {
+            border-color: #bdc3c7;
+        }
+  
+    
+        button[type="submit"] {
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        button[type="submit"]::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button[type="submit"]:hover::before {
+            left: 100%;
+        }
+
+        #adviceBox {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border-left: 5px solid  #2b5876;
+            animation: fadeIn 0.5s ease-out;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #adviceBox h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        #adviceBox p {
+            color: #5a6c7d;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            h2 {
+                font-size: 24px;
+            }
+            
+            select, input {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+            
+            button[type="submit"] {
+                padding: 15px 25px;
+                font-size: 16px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* From Uiverse.io by mrhyddenn */ 
+/*.Btn1 {
+  background: transparent;
+  position: relative;
+  padding: 5px 15px;
+  display: inline;
+  align-items: center;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid rgb(40, 144, 241);
+  border-radius: 25px;
+  outline: none;
+  overflow: hidden;
+  color: rgb(40, 144, 241);
+  transition: color 0.3s 0.1s ease-out;
+  text-align: center;
+}
+
+.Btn1 .tooltip {
+  margin: 10px;
+}
+
+.Btn1::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  content: '';
+  border-radius: 50%;
+  display: block;
+  width: 20em;
+  height: 20em;
+  left: -5em;
+  text-align: center;
+  transition: box-shadow 0.5s ease-out;
+  z-index: -1;
+}
+
+.Btn1:hover {
+  color: #fff;
+  border: 1px solid  rgb(40, 144, 241);
+}
+
+.Btn1:hover::before {
+  box-shadow: inset 0 0 0 10em rgb(40, 144, 241);
+}
+ .Btn2 {
+  background: transparent;
+  position: relative;
+  padding: 5px 15px;
+  display: inline;
+  align-items: center;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid rgb(40, 144, 241);
+  border-radius: 25px;
+  outline: none;
+  overflow: hidden;
+  color: rgb(40, 144, 241);
+  transition: color 0.3s 0.1s ease-out;
+  text-align: center;
+}
+
+.Btn2 .tooltip2 {
+  margin: 10px;
+}
+
+.Btn2::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  content: '';
+  border-radius: 50%;
+  display: block;
+  width: 20em;
+  height: 20em;
+  left: -5em;
+  text-align: center;
+  transition: box-shadow 0.5s ease-out;
+  z-index: -1;
+}
+
+.Btn2:hover {
+  color: #fff;
+  border: 1px solid rgb(40, 144, 241);
+}
+
+.Btn2:hover::before {
+  box-shadow: inset 0 0 0 10em rgb(40, 144, 241);
+}*/
+/* From Uiverse.io by Mangesh636 */ 
+.Btn1 {
+  background: transparent;
+  position: relative;
+  padding: 5px 15px;
+  display: inline;
+  align-items: center;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid rgb(0, 119, 181);
+  border-radius: 25px;
+  outline: none;
+  overflow: hidden;
+  color: rgb(0, 119, 181);
+  transition: color 0.3s 0.1s ease-out;
+  text-align: center;
+  padding-bottom: 9px;
+  margin-left: 5px;
+}
+
+.Btn1 .tooltip {
+  margin: 10px;
+}
+
+.Btn1::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  content: "";
+  border-radius: 50%;
+  display: block;
+  width: 20em;
+  height: 20em;
+  left: -5em;
+  text-align: center;
+  transition: box-shadow 0.5s ease-out;
+  z-index: -1;
+}
+
+.Btn1:hover {
+  color: #fff;
+  border: 1px solid rgb(0, 119, 181);
+}
+
+.Btn1:hover::before {
+  box-shadow: inset 0 0 0 10em rgb(0, 119, 181);
+}
+.Btn2 {
+  background: transparent;
+  position: relative;
+  padding: 5px 15px;
+  display: inline;
+  align-items: center;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid rgb(0, 119, 181);
+  border-radius: 25px;
+  outline: none;
+  overflow: hidden;
+  color: rgb(0, 119, 181);
+  transition: color 0.3s 0.1s ease-out;
+  text-align: center;
+  padding-bottom: 9px;
+  margin-left: 5px;
+}
+
+.Btn2 .tooltip2 {
+  margin: 10px;
+}
+
+.Btn2::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  content: "";
+  border-radius: 50%;
+  display: block;
+  width: 20em;
+  height: 20em;
+  left: -5em;
+  text-align: center;
+  transition: box-shadow 0.5s ease-out;
+  z-index: -1;
+}
+
+.Btn2:hover {
+  color: #fff;
+  border: 1px solid rgb(0, 119, 181);
+}
+
+.Btn2:hover::before {
+  box-shadow: inset 0 0 0 10em rgb(0, 119, 181);
+}
+
+  </style>
+</head>
+<body>
+   <div class="animated-bg">
+    <span class="icon-float icon-lightbulb"></span>
+    <span class="icon-float icon-gear"></span>
+    <span class="icon-float icon-briefcase"></span>
+    <span class="icon-float icon-arrow"></span>
+    <span class="icon-float icon-cap"></span>
+    <span class="icon-float icon-speech"></span>
+    <span class="icon-float icon-star"></span>
+    <span class="icon-float icon-network"></span>
+    <span class="icon-float icon-puzzle"></span>
+    <span class="icon-float icon-target"></span>
+    <span class="icon-float icon-pencil"></span>
+    <span class="icon-float icon-rocket"></span>
+    <span class="icon-float icon-lightbulb"></span> 
+    <span class="icon-float icon-gear"></span>
+    <span class="icon-float icon-cap"></span>
+    <span class="icon-float icon-briefcase"></span>
+    <span class="icon-float icon-star"></span>
+    <span class="icon-float icon-puzzle"></span>
+    <span class="icon-float icon-arrow"></span>
+    <span class="icon-float icon-target"></span>
+  </div>
+  <div class="container">
+     <button class="back-button" onclick="window.location.href='profile.html'">← Back to Profile</button>
+     <button class="Btn1" onclick="window.location.href='skillgap.html'">
+   <span class="logoIcon">📈</span>
+   <span class="tooltip">Skill Map</span>
+</button>
+<button class="Btn2" onclick="window.location.href='careerpath.html'">
+   <span class="logoIcon">🎯</span>
+   <span class="tooltip2">SkillRoute</span>
+</button>
+    <h2>Get Your Personalized Career Advice</h2>
+<form id="careerForm">
+   <div class="form-group">
+  <label for="interest">Select Your Interest:</label>
+  <select id="interest" required>
+    <option value="">--Choose--</option>
+    <option value="data">Data Structures</option>
+    <option value="ai">Artificial Intelligence</option>
+    <option value="web">Web Development</option>
+    <option value="mobile">Mobile Development</option>
+    <option value="design">UI/UX Design</option>
+  </select>
+   </div>
+ <div class="form-group">
+  <label for="experience">Years of Experience:</label>
+  <input type="number" id="experience" min="0" max="10" required />
+   </div>
+
+  <button type="submit">Get Advice</button>
+</form>
+
+<div id="adviceBox" style="display:none; margin-top:20px; padding:15px; background:#eee;"></div>
+  </div>
+<script>
+document.getElementById("careerForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+  const interest = document.getElementById("interest").value;
+  const experience = document.getElementById("experience").value;
+  const adviceBox = document.getElementById("adviceBox");
+
+  if (!interest) {
+    alert("Please select an interest.");
+    return;
+  }
+
+  fetch("http://localhost:8081/career/advice", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: "test@example.com",  // you can replace or remove
+      skills: experience,
+      interests: interest
+    })
+  })
+  .then(response => response.text())
+  .then(data => {
+    adviceBox.textContent = data;
+    adviceBox.style.display = "block";
+  })
+  .catch(error => {
+    adviceBox.textContent = "Error fetching advice.";
+    adviceBox.style.display = "block";
+    console.error("Error:", error);
+  });
+  
+  const newAdvice = "New recommendation: " + new Date().toLocaleTimeString();
+  localStorage.setItem("latestAdvice", newAdvice);
+   const currentCount = parseInt(localStorage.getItem("adviceCount")) || 0;
+  localStorage.setItem("adviceCount", (currentCount + 1).toString());
+  
+  console.log("New advice stored:", newAdvice);
+});
+
+</script>
+</body>
+</html>

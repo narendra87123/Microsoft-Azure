@@ -1,0 +1,4214 @@
+
+<!--final 1-->
+
+<!--
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Study Resources - Open Library API</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, select { padding: 8px; margin-right: 8px; width: 300px; }
+    button { padding: 8px 12px; }
+
+    #results.grid-view .book {
+      width: 200px;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .book {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #results.grid-view {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    img { max-height: 100px; }
+
+    .suggestions, .autocomplete {
+      margin-top: 10px;
+      color: #555;
+    }
+
+    .suggestions span, .autocomplete div {
+      background: #eee;
+      margin: 2px;
+      padding: 4px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    .autocomplete {
+      border: 1px solid #ccc;
+      width: 300px;
+      max-height: 150px;
+      overflow-y: auto;
+      position: absolute;
+      background: #fff;
+      z-index: 10;
+    }
+
+    #loadMoreBtn {
+      display: none;
+      margin: 20px auto;
+      padding: 10px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    #loadMoreBtn:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Find Study Resources (Books)</h1>
+
+  <input type="text" id="searchInput" placeholder="Enter topic e.g. python, java, math" oninput="showAutocomplete()" autocomplete="off" />
+  <div class="autocomplete" id="autocompleteBox" style="display:none;"></div>
+  <button onclick="searchBooks(true)">Search</button>
+
+  <select id="viewToggle" onchange="toggleView()">
+    <option value="list">List View</option>
+    <option value="grid">Grid View</option>
+  </select>
+
+  <select id="sortSelect" onchange="sortResults()">
+    <option value="">Sort by</option>
+    <option value="title">Title</option>
+    <option value="year">Year</option>
+  </select>
+
+  <div class="suggestions" id="suggestions"></div>
+
+  <div id="results" class="list-view"></div>
+
+  <button id="loadMoreBtn" onclick="loadMoreBooks()">Load More</button>
+
+  <script>
+    class TrieNode {
+      constructor() {
+        this.children = {};
+        this.isEndOfWord = false;
+      }
+    }
+
+    class Trie {
+      constructor() {
+        this.root = new TrieNode();
+      }
+
+      insert(word) {
+        let node = this.root;
+        for (let char of word.toLowerCase()) {
+          if (!node.children[char]) {
+            node.children[char] = new TrieNode();
+          }
+          node = node.children[char];
+        }
+        node.isEndOfWord = true;
+      }
+
+      search(prefix) {
+        let node = this.root;
+        for (let char of prefix.toLowerCase()) {
+          if (!node.children[char]) return [];
+          node = node.children[char];
+        }
+        return this._collectWords(prefix.toLowerCase(), node);
+      }
+
+      _collectWords(prefix, node) {
+        let results = [];
+        if (node.isEndOfWord) results.push(prefix);
+        for (let char in node.children) {
+          results.push(...this._collectWords(prefix + char, node.children[char]));
+        }
+        return results;
+      }
+    }
+
+    const trie = new Trie();
+    const searchSet = new Set();
+    let lastResults = [];
+    let currentQuery = "";
+    let currentPage = 1;
+
+    function toggleView() {
+      const view = document.getElementById('viewToggle').value;
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.className = view === 'grid' ? 'grid-view' : 'list-view';
+    }
+
+    function showAutocomplete() {
+      const input = document.getElementById('searchInput').value.trim();
+      const box = document.getElementById('autocompleteBox');
+      if (!input) {
+        box.style.display = 'none';
+        return;
+      }
+      const suggestions = trie.search(input.toLowerCase());
+      if (suggestions.length === 0) {
+        box.style.display = 'none';
+        return;
+      }
+      box.innerHTML = suggestions.map(s => `<div onclick="loadSuggestion('${s}')">${s}</div>`).join('');
+      box.style.display = 'block';
+    }
+
+    async function searchBooks(reset = true) {
+      const query = document.getElementById('searchInput').value.trim();
+      const resultsDiv = document.getElementById('results');
+      const suggestionsDiv = document.getElementById('suggestions');
+      const box = document.getElementById('autocompleteBox');
+      box.style.display = 'none';
+
+      if (!query) {
+        alert('Please enter a topic to search');
+        return;
+      }
+
+      if (reset) {
+        resultsDiv.innerHTML = 'Loading...';
+        lastResults = [];
+        currentPage = 1;
+        document.getElementById('loadMoreBtn').style.display = 'none';
+      }
+
+      if (!searchSet.has(query.toLowerCase())) {
+        trie.insert(query.toLowerCase());
+        searchSet.add(query.toLowerCase());
+      }
+
+      const suggestions = trie.search(query.toLowerCase());
+      if (suggestions.length > 1) {
+        suggestionsDiv.innerHTML = `<strong>Suggestions:</strong> ` + suggestions
+          .filter(item => item !== query.toLowerCase())
+          .map(s => `<span onclick="loadSuggestion('${s}')">${s}</span>`).join('');
+      }
+
+      try {
+        const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&page=${currentPage}&limit=10`);
+        const data = await response.json();
+
+        if (reset && data.numFound === 0) {
+          resultsDiv.innerHTML = 'No books found.';
+          return;
+        }
+
+        if (data.docs.length > 0) {
+          lastResults = reset ? data.docs : [...lastResults, ...data.docs];
+          currentQuery = query;
+          displayBooks(lastResults);
+          document.getElementById('loadMoreBtn').style.display = 'block';
+        } else {
+          document.getElementById('loadMoreBtn').style.display = 'none';
+        }
+
+      } catch (error) {
+        resultsDiv.innerHTML = 'Error loading data.';
+        console.error(error);
+      }
+    }
+
+    function loadSuggestion(term) {
+      document.getElementById('searchInput').value = term;
+      searchBooks(true);
+    }
+
+    function sortResults() {
+      const sortBy = document.getElementById('sortSelect').value;
+      if (sortBy === "title") {
+        lastResults.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+      } else if (sortBy === "year") {
+        lastResults.sort((a, b) => (a.first_publish_year || 0) - (b.first_publish_year || 0));
+      }
+      displayBooks(lastResults);
+    }
+
+    function displayBooks(books) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+      books.forEach(book => {
+        const title = book.title || 'No title';
+        const authors = book.author_name ? book.author_name.join(', ') : 'Unknown author';
+        const year = book.first_publish_year || 'Unknown year';
+        const coverId = book.cover_i;
+        const coverImg = coverId
+          ? `<img src="https://covers.openlibrary.org/b/id/${coverId}-M.jpg" alt="Cover" />`
+          : `<div style="width: 80px; height: 100px; background:#ccc; display:flex; align-items:center; justify-content:center; color:#666;">No Cover</div>`;
+
+        const bookDiv = document.createElement('div');
+        bookDiv.className = 'book';
+        bookDiv.innerHTML = `
+          ${coverImg}
+          <div>
+            <h3>${title}</h3>
+            <p><strong>Author(s):</strong> ${authors}</p>
+            <p><strong>First Published:</strong> ${year}</p>
+          </div>
+        `;
+        resultsDiv.appendChild(bookDiv);
+      });
+    }
+
+    function loadMoreBooks() {
+      currentPage++;
+      searchBooks(false);
+    }
+  </script>
+
+</body>
+</html>
+-->
+
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Study Resources - Open Library API</title>
+  <style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f3f6fb;
+    color: #333;
+    padding: 20px;
+    margin: 0;
+  }
+
+  h1 {
+    text-align: center;
+    color: #2b6cb0;
+    margin-bottom: 30px;
+  }
+
+  input, select {
+    padding: 10px 14px;
+    width: 280px;
+    border: 1.5px solid #ccc;
+    border-radius: 10px;
+    margin-right: 12px;
+    font-size: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    transition: border-color 0.3s ease;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: #2b6cb0;
+    box-shadow: 0 0 6px #2b6cb0aa;
+  }
+
+  button {
+    padding: 12px 22px;
+    background: linear-gradient(135deg, #2b6cb0, #3182ce);
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(49, 130, 206, 0.4);
+    transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+  }
+
+  button:hover {
+    background: linear-gradient(135deg, #2c5282, #2b6cb0);
+    box-shadow: 0 6px 12px rgba(44, 82, 130, 0.6);
+    transform: translateY(-2px);
+  }
+
+  button:active {
+    background: linear-gradient(135deg, #1e3a8a, #2c5282);
+    box-shadow: 0 3px 6px rgba(30, 58, 138, 0.7);
+    transform: translateY(0);
+  }
+
+  #autocompleteBox {
+    position: absolute;
+    background: white;
+    border: 1.5px solid #ccc;
+    max-width: 280px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    z-index: 10;
+    margin-top: 2px;
+  }
+
+  #autocompleteBox div {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #333;
+    transition: background 0.2s ease;
+  }
+
+  #autocompleteBox div:hover {
+    background-color: #e2e8f0;
+  }
+
+  .books-container.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .books-container.list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+  }
+
+  .book {
+    background: white;
+    padding: 18px 22px;
+    border-radius: 14px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.07);
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    transition: transform 0.2s, box-shadow 0.3s;
+  }
+
+  .book:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.12);
+  }
+
+  .book img {
+    max-width: 100px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .book div {
+    flex: 1;
+  }
+
+  .book h3 {
+    margin: 0 0 8px;
+    color: #2b6cb0;
+    font-size: 20px;
+  }
+
+  .book p {
+    margin: 5px 0;
+    font-size: 15px;
+    color: #555;
+    line-height: 1.3;
+  }
+
+  #loadMoreBtn {
+    display: block;
+    margin: 35px auto 10px;
+    font-size: 17px;
+    padding: 14px 30px;
+    background: linear-gradient(135deg, #2b6cb0, #3182ce);
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(49, 130, 206, 0.45);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s, box-shadow 0.3s, transform 0.15s;
+  }
+
+  #loadMoreBtn:hover {
+    background: linear-gradient(135deg, #2c5282, #2b6cb0);
+    box-shadow: 0 8px 18px rgba(44, 82, 130, 0.65);
+    transform: translateY(-2px);
+  }
+
+  #loadMoreBtn:active {
+    background: linear-gradient(135deg, #1e3a8a, #2c5282);
+    box-shadow: 0 4px 10px rgba(30, 58, 138, 0.75);
+    transform: translateY(0);
+  }
+
+  @media (max-width: 600px) {
+    input, select {
+      width: 100%;
+      margin-bottom: 14px;
+      margin-right: 0;
+    }
+
+    .books-container.grid {
+      grid-template-columns: 1fr;
+    }
+
+    .book {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .book img {
+      margin-bottom: 12px;
+    }
+  }
+</style>
+
+</head>
+<body>
+
+  <h1>📚 Study Resources Finder</h1>
+
+  <div style="position: relative;">
+    <input type="text" id="searchInput" placeholder="Enter topic (e.g. python, java)" oninput="showAutocomplete()" />
+    <div id="autocompleteBox" style="display:none;"></div>
+  </div>
+
+  <select id="sortOption" onchange="sortResults()">
+    <option value="">Sort By</option>
+    <option value="title">Title</option>
+    <option value="year">First Published</option>
+  </select>
+
+  <button onclick="toggleView()">Toggle View</button>
+  <button onclick="searchBooks(true)">Search</button>
+
+  <div id="results" class="books-container list"></div>
+  <button id="loadMoreBtn" style="display:none;" onclick="searchBooks(false)">Load More</button>
+
+  <script>
+    // -------------------- DSA: Trie ------------------------
+    class TrieNode {
+      constructor() {
+        this.children = {};
+        this.isEndOfWord = false;
+      }
+    }
+
+    class Trie {
+      constructor() {
+        this.root = new TrieNode();
+      }
+
+      insert(word) {
+        let node = this.root;
+        for (let char of word.toLowerCase()) {
+          if (!node.children[char]) node.children[char] = new TrieNode();
+          node = node.children[char];
+        }
+        node.isEndOfWord = true;
+      }
+
+      search(prefix) {
+        let node = this.root;
+        for (let char of prefix.toLowerCase()) {
+          if (!node.children[char]) return [];
+          node = node.children[char];
+        }
+        return this.getWordsFromNode(node, prefix);
+      }
+
+      getWordsFromNode(node, prefix) {
+        let words = [];
+        if (node.isEndOfWord) words.push(prefix);
+        for (let char in node.children) {
+          words = words.concat(this.getWordsFromNode(node.children[char], prefix + char));
+        }
+        return words;
+      }
+    }
+
+    const trie = new Trie();
+    const searchSet = new Set();
+    const popularTopics = [
+      'python', 'java', 'machine learning', 'data science', 'artificial intelligence',
+      'algorithms', 'web development', 'networking', 'operating systems',
+      'calculus', 'physics', 'chemistry', 'biology', 'discrete math', 'statistics'
+    ];
+    popularTopics.forEach(topic => trie.insert(topic));
+
+    // -------------------- App Logic ------------------------
+    let currentQuery = '';
+    let currentPage = 1;
+    let viewMode = 'list';
+    let currentData = [];
+
+    function toggleView() {
+      const resultsDiv = document.getElementById('results');
+      viewMode = viewMode === 'list' ? 'grid' : 'list';
+      resultsDiv.className = `books-container ${viewMode}`;
+      renderBooks(currentData);
+    }
+
+    async function searchBooks(isNewSearch) {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return alert('Please enter a topic');
+
+      if (isNewSearch) {
+        currentQuery = query;
+        currentPage = 1;
+        currentData = [];
+        document.getElementById('results').innerHTML = 'Loading...';
+      } else {
+        currentPage++;
+      }
+
+      if (!searchSet.has(query.toLowerCase())) {
+        trie.insert(query.toLowerCase());
+        searchSet.add(query.toLowerCase());
+      }
+
+      try {
+        const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(currentQuery)}&page=${currentPage}&limit=10`);
+        const data = await response.json();
+        const books = data.docs.map(book => ({
+          title: book.title || 'No title',
+          authors: book.author_name ? book.author_name.join(', ') : 'Unknown author',
+          year: book.first_publish_year || 'Unknown year',
+          coverId: book.cover_i
+        }));
+
+        currentData = [...currentData, ...books];
+        renderBooks(currentData);
+
+        document.getElementById('loadMoreBtn').style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        document.getElementById('results').innerHTML = 'Error loading books.';
+      }
+    }
+
+    function renderBooks(data) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+      data.forEach(book => {
+        const coverImg = book.coverId
+          ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="Book cover"/>`
+          : `<div style="width:80px; height:100px; background:#ccc; display:flex; align-items:center; justify-content:center;">No Cover</div>`;
+
+        const bookDiv = document.createElement('div');
+        bookDiv.className = 'book';
+        bookDiv.innerHTML = `
+          ${coverImg}
+          <div>
+            <h3>${book.title}</h3>
+            <p><strong>Author(s):</strong> ${book.authors}</p>
+            <p><strong>First Published:</strong> ${book.year}</p>
+          </div>
+        `;
+        resultsDiv.appendChild(bookDiv);
+      });
+    }
+
+    function sortResults() {
+      const option = document.getElementById('sortOption').value;
+      if (option === 'title') {
+        currentData.sort((a, b) => a.title.localeCompare(b.title));
+      } else if (option === 'year') {
+        currentData.sort((a, b) => (a.year || 0) - (b.year || 0));
+      }
+      renderBooks(currentData);
+    }
+
+    function showAutocomplete() {
+      const input = document.getElementById('searchInput').value.trim();
+      const box = document.getElementById('autocompleteBox');
+      if (!input) {
+        box.style.display = 'none';
+        return;
+      }
+      const suggestions = trie.search(input.toLowerCase());
+      if (suggestions.length === 0) {
+        box.style.display = 'none';
+        return;
+      }
+      box.innerHTML = suggestions
+        .slice(0, 10)
+        .map(s => `<div onclick="loadSuggestion('${s}')">${s}</div>`)
+        .join('');
+      box.style.display = 'block';
+    }
+
+    function loadSuggestion(text) {
+      document.getElementById('searchInput').value = text;
+      document.getElementById('autocompleteBox').style.display = 'none';
+      searchBooks(true);
+    }
+  </script>
+
+</body>
+</html>
+-->
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Study Resources - Open Library API Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f7f9fc;
+      color: #333;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #2b6cb0;
+      text-shadow: 1px 1px 2px #a0c4ff;
+    }
+
+    /* Controls container */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    input, select, button {
+      flex: 1 1 200px;
+      max-width: 320px;
+    }
+
+    input, select {
+      padding: 10px 14px;
+      border: 1.5px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #2b6cb0;
+      box-shadow: 0 0 6px #2b6cb0aa;
+    }
+
+    button {
+      padding: 12px 22px;
+      background: linear-gradient(135deg, #2b6cb0, #3182ce);
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(49, 130, 206, 0.4);
+      transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+      min-width: 110px;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #2c5282, #2b6cb0);
+      box-shadow: 0 6px 12px rgba(44, 82, 130, 0.6);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      background: linear-gradient(135deg, #1e3a8a, #2c5282);
+      box-shadow: 0 3px 6px rgba(30, 58, 138, 0.7);
+      transform: translateY(0);
+    }
+
+    /* Autocomplete dropdown */
+    #autocompleteBox {
+      max-width: 320px;
+      margin: 0 auto 15px auto;
+      border: 1.5px solid #2b6cb0;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(43, 108, 176, 0.25);
+      position: relative;
+      z-index: 10;
+    }
+    #autocompleteBox div {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+    #autocompleteBox div:hover {
+      background-color: #2b6cb0;
+      color: white;
+    }
+
+    /* Results container */
+    #results {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      justify-content: center;
+    }
+
+    /* Grid view */
+    #results.grid .book {
+      width: 220px;
+      flex-direction: column;
+      text-align: center;
+      padding: 15px;
+      box-shadow: 0 4px 12px rgba(49, 130, 206, 0.15);
+      border-radius: 14px;
+      background: white;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+    }
+    #results.grid .book:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 20px rgba(49, 130, 206, 0.3);
+    }
+    #results.grid .book img {
+      max-height: 140px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    /* List view */
+    #results.list {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    #results.list .book {
+      display: flex;
+      width: 100%;
+      padding: 12px 15px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+      align-items: center;
+      gap: 15px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    #results.list .book:hover {
+      background-color: #e6f0ff;
+    }
+    #results.list .book img {
+      max-height: 100px;
+      border-radius: 8px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    #results.list .book > div {
+      flex: 1;
+      text-align: left;
+    }
+
+    /* Book details text */
+    .book h3 {
+      margin: 8px 0 6px 0;
+      color: #2b6cb0;
+      font-size: 18px;
+    }
+    .book p {
+      margin: 4px 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* Load more button */
+    #loadMoreBtn {
+      margin: 30px auto;
+      display: block;
+      background: #38a169;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(56, 161, 105, 0.5);
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+      min-width: 150px;
+      font-weight: 600;
+    }
+    #loadMoreBtn:hover {
+      background: #2f855a;
+      box-shadow: 0 6px 14px rgba(47, 133, 90, 0.7);
+    }
+
+    @media (max-width: 700px) {
+      .controls {
+        flex-direction: column;
+        align-items: center;
+      }
+      input, select, button {
+        max-width: 100%;
+        flex: none;
+      }
+      #results.grid .book {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Find Study Resources (Books)</h1>
+
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Enter topic e.g. python, java, math" autocomplete="off" />
+    <button onclick="searchBooks()">Search</button>
+    <button onclick="toggleView()">Toggle View</button>
+    <select id="sortSelect" onchange="sortBooks()">
+      <option value="">Sort By</option>
+      <option value="title">Title</option>
+      <option value="author">Author</option>
+      <option value="year">Year</option>
+    </select>
+  </div>
+
+  <div id="autocompleteBox" style="display:none;"></div>
+
+  <div id="results" class="grid"></div>
+
+  <button id="loadMoreBtn" style="display:none;" onclick="loadMore()">Load More</button>
+
+<script>
+  // Trie class for autocomplete
+  class TrieNode {
+    constructor() {
+      this.children = {};
+      this.isEnd = false;
+    }
+  }
+  class Trie {
+    constructor() {
+      this.root = new TrieNode();
+    }
+    insert(word) {
+      let node = this.root;
+      for (const char of word.toLowerCase()) {
+        if (!node.children[char]) node.children[char] = new TrieNode();
+        node = node.children[char];
+      }
+      node.isEnd = true;
+    }
+    searchPrefix(prefix) {
+      let node = this.root;
+      for (const char of prefix.toLowerCase()) {
+        if (!node.children[char]) return null;
+        node = node.children[char];
+      }
+      return node;
+    }
+    autoComplete(prefix) {
+      const results = [];
+      const node = this.searchPrefix(prefix);
+      if (!node) return results;
+
+      const dfs = (currentNode, path) => {
+        if (results.length >= 5) return; // limit suggestions
+        if (currentNode.isEnd) results.push(path);
+        for (const char in currentNode.children) {
+          dfs(currentNode.children[char], path + char);
+        }
+      };
+      dfs(node, prefix.toLowerCase());
+      return results;
+    }
+  }
+
+  // Globals
+  let booksData = [];
+  let currentView = 'grid';
+  let currentPage = 1;
+  let queryGlobal = '';
+  const pageSize = 10;
+  const trie = new Trie();
+
+  const searchInput = document.getElementById('searchInput');
+  const resultsDiv = document.getElementById('results');
+  const autocompleteBox = document.getElementById('autocompleteBox');
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  const sortSelect = document.getElementById('sortSelect');
+
+  // Event for autocomplete suggestions
+  searchInput.addEventListener('input', () => {
+    const val = searchInput.value.trim();
+    if (!val) {
+      autocompleteBox.style.display = 'none';
+      return;
+    }
+    const suggestions = trie.autoComplete(val);
+    if (suggestions.length === 0) {
+      autocompleteBox.style.display = 'none';
+      return;
+    }
+    autocompleteBox.innerHTML = '';
+    suggestions.forEach(s => {
+      const div = document.createElement('div');
+      div.textContent = s;
+      div.onclick = () => {
+        searchInput.value = s;
+        autocompleteBox.style.display = 'none';
+        searchBooks();
+      };
+      autocompleteBox.appendChild(div);
+    });
+    autocompleteBox.style.display = 'block';
+  });
+
+  // Hide autocomplete when clicking outside
+  document.addEventListener('click', e => {
+    if (e.target !== searchInput) {
+      autocompleteBox.style.display = 'none';
+    }
+  });
+
+  async function fetchBooks(query, page = 1) {
+    try {
+      const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&page=${page}&limit=${pageSize}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      return data;
+    } catch (e) {
+      console.error('Fetch error:', e);
+      return null;
+    }
+  }
+
+  function renderBooks(data, append = false) {
+    if (!append) resultsDiv.innerHTML = '';
+
+    data.forEach(book => {
+      const title = book.title || 'No title';
+      const authors = book.author_name ? book.author_name.join(', ') : 'Unknown author';
+      const firstPublished = book.first_publish_year || 'Unknown year';
+      const coverId = book.cover_i;
+      const coverImg = coverId
+        ? `<img src="https://covers.openlibrary.org/b/id/${coverId}-M.jpg" alt="Book cover" />`
+        : `<div style="width: 80px; height: 100px; background:#ccc; display:flex; align-items:center; justify-content:center; color:#666; margin: auto;">No Cover</div>`;
+
+      const bookDiv = document.createElement('div');
+      bookDiv.className = 'book';
+
+      if(currentView === 'grid'){
+        bookDiv.innerHTML = `
+          ${coverImg}
+          <h3>${title}</h3>
+          <p><strong>Author(s):</strong> ${authors}</p>
+          <p><strong>First Published:</strong> ${firstPublished}</p>
+        `;
+      } else {
+        bookDiv.innerHTML = `
+          ${coverImg}
+          <div>
+            <h3>${title}</h3>
+            <p><strong>Author(s):</strong> ${authors}</p>
+            <p><strong>First Published:</strong> ${firstPublished}</p>
+          </div>
+        `;
+      }
+
+      resultsDiv.appendChild(bookDiv);
+    });
+  }
+
+  function toggleView() {
+    if(currentView === 'grid'){
+      currentView = 'list';
+      resultsDiv.classList.remove('grid');
+      resultsDiv.classList.add('list');
+    } else {
+      currentView = 'grid';
+      resultsDiv.classList.remove('list');
+      resultsDiv.classList.add('grid');
+    }
+    renderBooks(booksData);
+  }
+
+  function sortBooks() {
+    const sortBy = sortSelect.value;
+    if(!sortBy) return;
+
+    booksData.sort((a,b) => {
+      if(sortBy === 'title'){
+        return (a.title || '').localeCompare(b.title || '');
+      }
+      if(sortBy === 'author'){
+        return ((a.author_name ? a.author_name[0] : '')).localeCompare((b.author_name ? b.author_name[0] : ''));
+      }
+      if(sortBy === 'year'){
+        return (a.first_publish_year || 0) - (b.first_publish_year || 0);
+      }
+      return 0;
+    });
+    renderBooks(booksData);
+  }
+
+  async function searchBooks() {
+    const query = searchInput.value.trim();
+    if (!query) {
+      alert('Please enter a topic to search');
+      return;
+    }
+    queryGlobal = query;
+    currentPage = 1;
+    resultsDiv.innerHTML = 'Loading...';
+    loadMoreBtn.style.display = 'none';
+
+    const data = await fetchBooks(queryGlobal, currentPage);
+    if (!data || data.numFound === 0) {
+      resultsDiv.innerHTML = 'No books found.';
+      return;
+    }
+
+    booksData = data.docs.slice(0, pageSize);
+    renderBooks(booksData);
+
+    // Insert words into trie for autocomplete
+    trie.insert(queryGlobal);
+
+    // Show load more if more results available
+    if(data.docs.length >= pageSize) {
+      loadMoreBtn.style.display = 'block';
+    } else {
+      loadMoreBtn.style.display = 'none';
+    }
+  }
+
+  async function loadMore() {
+    currentPage++;
+    loadMoreBtn.disabled = true;
+    loadMoreBtn.textContent = 'Loading...';
+
+    const data = await fetchBooks(queryGlobal, currentPage);
+    loadMoreBtn.disabled = false;
+    loadMoreBtn.textContent = 'Load More';
+
+    if (!data || data.docs.length === 0) {
+      loadMoreBtn.style.display = 'none';
+      return;
+    }
+
+    booksData = booksData.concat(data.docs.slice(0, pageSize));
+    renderBooks(booksData, true);
+
+    if(data.docs.length < pageSize) {
+      loadMoreBtn.style.display = 'none';
+    }
+  }
+</script>
+
+</body>
+</html>
+-->
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Study Resources - Open Library API Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .search-container {
+      position: relative;
+      max-width: 350px;
+      margin-bottom: 10px;
+    }
+    #searchInput {
+      padding: 10px;
+      width: 100%;
+      font-size: 16px;
+      border: 1.5px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    #searchInput:focus {
+      border-color: #007BFF;
+      outline: none;
+    }
+    .suggestions-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #ccc;
+      max-height: 180px;
+      overflow-y: auto;
+      position: absolute;
+      background: white;
+      width: 100%;
+      display: none;
+      z-index: 10;
+      border-radius: 0 0 5px 5px;
+      box-sizing: border-box;
+    }
+    .suggestions-list li {
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+    .suggestions-list li:hover {
+      background-color: #007BFF;
+      color: white;
+    }
+    button, select {
+      cursor: pointer;
+      padding: 8px 14px;
+      font-size: 16px;
+      margin-right: 10px;
+      border-radius: 5px;
+      border: 1.5px solid #007BFF;
+      background-color: #007BFF;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:hover, select:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+    #controls {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    #results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
+      gap: 15px;
+    }
+    .list-view #results {
+      display: block;
+    }
+    .book {
+      border: 1px solid #ddd;
+      background: white;
+      padding: 10px;
+      display: flex;
+      gap: 15px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+      align-items: center;
+    }
+    .list-view .book {
+      flex-direction: row;
+      margin-bottom: 15px;
+    }
+    .grid-view .book {
+      flex-direction: column;
+      text-align: center;
+    }
+    .book img {
+      max-height: 140px;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+    .book-info {
+      flex-grow: 1;
+    }
+    .book-info h3 {
+      margin: 0 0 5px 0;
+      font-size: 18px;
+      color: #222;
+    }
+    .book-info p {
+      margin: 3px 0;
+      color: #555;
+      font-size: 14px;
+    }
+    #loadMoreBtn {
+      display: block;
+      margin: 30px auto 0 auto;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+    #loadMoreBtn:hover:not(:disabled) {
+      background-color: #218838;
+    }
+    #loadMoreBtn:disabled {
+      background-color: #94d3a2;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Find Study Resources (Books)</h1>
+
+  <div id="controls">
+    <div class="search-container">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Enter topic e.g. python, java, math"
+        autocomplete="off"
+      />
+      <ul id="suggestionsList" class="suggestions-list"></ul>
+    </div>
+    <button id="searchBtn">Search</button>
+    <button id="toggleViewBtn">Toggle View</button>
+    <select id="sortSelect" title="Sort books">
+      <option value="">Sort By</option>
+      <option value="title">Title</option>
+      <option value="author">Author</option>
+      <option value="year">Year</option>
+    </select>
+  </div>
+
+  <div id="results" class="grid-view"></div>
+  <button id="loadMoreBtn" style="display:none;">Load More</button>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const suggestionsList = document.getElementById('suggestionsList');
+    const searchBtn = document.getElementById('searchBtn');
+    const resultsDiv = document.getElementById('results');
+    const toggleViewBtn = document.getElementById('toggleViewBtn');
+    const sortSelect = document.getElementById('sortSelect');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+
+    let currentView = 'grid'; // or 'list'
+    let booksData = [];
+    let queryGlobal = '';
+    let currentPage = 1;
+    const pageSize = 10;
+
+    // Debounce helper to limit API calls on input
+    function debounce(func, delay) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+
+    // Fetch autocomplete suggestions (top 5 titles)
+    async function fetchSuggestions(query) {
+      try {
+        const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5`);
+        const data = await response.json();
+        return data.docs.map(book => book.title).filter(Boolean);
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+        return [];
+      }
+    }
+
+    // Render autocomplete suggestions
+    function renderSuggestions(suggestions) {
+      if (suggestions.length === 0) {
+        suggestionsList.style.display = 'none';
+        suggestionsList.innerHTML = '';
+        return;
+      }
+      suggestionsList.innerHTML = suggestions.map(s => `<li>${s}</li>`).join('');
+      suggestionsList.style.display = 'block';
+
+      [...suggestionsList.children].forEach(item => {
+        item.addEventListener('click', () => {
+          searchInput.value = item.textContent;
+          suggestionsList.style.display = 'none';
+        });
+      });
+    }
+
+    // Input event with debounce
+    searchInput.addEventListener('input', debounce(async () => {
+      const query = searchInput.value.trim();
+      if (!query) {
+        suggestionsList.style.display = 'none';
+        suggestionsList.innerHTML = '';
+        return;
+      }
+      const suggestions = await fetchSuggestions(query);
+      renderSuggestions(suggestions);
+    }, 300));
+
+    // Hide suggestions if clicked outside
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search-container')) {
+        suggestionsList.style.display = 'none';
+      }
+    });
+
+    // Fetch books from API with pagination
+    async function fetchBooks(query, page = 1) {
+      try {
+        const offset = (page - 1) * pageSize;
+        const response = await fetch(
+          `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=${pageSize}&offset=${offset}`
+        );
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error fetching books:', error);
+        return null;
+      }
+    }
+
+    // Render books to page
+    function renderBooks(books, append = false) {
+      if (!append) resultsDiv.innerHTML = '';
+
+      books.forEach(book => {
+        const title = book.title || 'No title';
+        const authors = book.author_name ? book.author_name.join(', ') : 'Unknown author';
+        const firstPublished = book.first_publish_year || 'Unknown year';
+
+        const coverId = book.cover_i;
+        const coverImg = coverId
+          ? `<img src="https://covers.openlibrary.org/b/id/${coverId}-M.jpg" alt="Book cover" />`
+          : `<div style="width: 120px; height: 160px; background:#ccc; display:flex; align-items:center; justify-content:center; color:#666; border-radius:4px;">No Cover</div>`;
+
+        const bookDiv = document.createElement('div');
+        bookDiv.className = 'book';
+        bookDiv.innerHTML = `
+          ${coverImg}
+          <div class="book-info">
+            <h3>${title}</h3>
+            <p><strong>Author(s):</strong> ${authors}</p>
+            <p><strong>First Published:</strong> ${firstPublished}</p>
+          </div>
+        `;
+
+        resultsDiv.appendChild(bookDiv);
+      });
+    }
+
+    // Sort booksData and re-render
+    function sortBooks(criteria) {
+      if (!criteria) return;
+      booksData.sort((a, b) => {
+        let valA, valB;
+        if (criteria === 'title') {
+          valA = (a.title || '').toLowerCase();
+          valB = (b.title || '').toLowerCase();
+        } else if (criteria === 'author') {
+          valA = (a.author_name ? a.author_name[0] : '').toLowerCase();
+          valB = (b.author_name ? b.author_name[0] : '').toLowerCase();
+        } else if (criteria === 'year') {
+          valA = a.first_publish_year || 0;
+          valB = b.first_publish_year || 0;
+        }
+        if (valA < valB) return -1;
+        if (valA > valB) return 1;
+        return 0;
+      });
+      renderBooks(booksData);
+    }
+
+    // Search button click handler
+    searchBtn.addEventListener('click', async () => {
+      const query = searchInput.value.trim();
+      if (!query) {
+        alert('Please enter a topic to search');
+        return;
+      }
+      queryGlobal = query;
+      currentPage = 1;
+      booksData = [];
+
+      loadMoreBtn.style.display = 'none';
+      resultsDiv.innerHTML = 'Loading...';
+
+      const data = await fetchBooks(queryGlobal, currentPage);
+
+      if (!data || data.docs.length === 0) {
+        resultsDiv.innerHTML = 'No books found.';
+        return;
+      }
+
+      booksData = data.docs;
+      sortSelect.value = ''; // reset sort
+
+      renderBooks(booksData);
+
+      if (data.numFound > booksData.length) {
+        loadMoreBtn.style.display = 'block';
+      } else {
+        loadMoreBtn.style.display = 'none';
+      }
+    });
+
+    // Toggle grid/list view
+    toggleViewBtn.addEventListener('click', () => {
+      if (currentView === 'grid') {
+        currentView = 'list';
+        resultsDiv.classList.remove('grid-view');
+        resultsDiv.classList.add('list-view');
+      } else {
+        currentView = 'grid';
+        resultsDiv.classList.remove('list-view');
+        resultsDiv.classList.add('grid-view');
+      }
+    });
+
+    // Sort select change handler
+    sortSelect.addEventListener('change', () => {
+      sortBooks(sortSelect.value);
+    });
+
+    // Load more button click handler
+    loadMoreBtn.addEventListener('click', async () => {
+      currentPage++;
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = 'Loading...';
+
+      const data = await fetchBooks(queryGlobal, currentPage);
+
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = 'Load More';
+
+      if (!data || data.docs.length === 0) {
+        loadMoreBtn.style.display = 'none';
+        return;
+      }
+
+      booksData = booksData.concat(data.docs);
+      sortBooks(sortSelect.value || ''); // apply sorting if any
+      renderBooks(booksData, true);
+
+      if (booksData.length >= data.numFound) {
+        loadMoreBtn.style.display = 'none';
+      }
+    });
+  </script>
+
+</body>
+</html>
+-->
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Study Resources & Mentor Videos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #2a475e;
+    }
+    .search-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 300px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-shadow: inset 1px 1px 5px #ddd;
+    }
+    button {
+      padding: 10px 18px;
+      background-color: #2a475e;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      box-shadow: 1px 1px 5px #aaa;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #3b5e7a;
+    }
+    select {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-shadow: inset 1px 1px 5px #ddd;
+      cursor: pointer;
+    }
+    .autocomplete-suggestions {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      max-height: 150px;
+      overflow-y: auto;
+      width: 300px;
+      z-index: 1000;
+      border-radius: 0 0 5px 5px;
+    }
+    .autocomplete-suggestion {
+      padding: 8px;
+      cursor: pointer;
+    }
+    .autocomplete-suggestion:hover {
+      background-color: #eef6fb;
+    }
+
+    /* Results styles */
+    #results, #videoResults {
+      margin-top: 20px;
+    }
+    #results.grid .book {
+      display: inline-block;
+      vertical-align: top;
+      width: calc(50% - 20px);
+      margin: 10px;
+    }
+    #results.list .book {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .book {
+      border: 1px solid #ddd;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 1px 1px 5px #ccc;
+    }
+    .book img {
+      max-height: 120px;
+      border-radius: 5px;
+    }
+    .book div {
+      margin-left: 15px;
+    }
+    .book h3 {
+      margin: 0 0 8px;
+      color: #2a475e;
+    }
+    .book p {
+      margin: 4px 0;
+      color: #555;
+    }
+
+    /* Video results */
+    #videoResults > div {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      padding: 12px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    #videoResults img {
+      width: 160px;
+      border-radius: 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    #videoResults h4 {
+      margin: 0 0 8px;
+      color: #2a475e;
+    }
+    #videoResults p {
+      margin: 0;
+      color: #666;
+    }
+
+    /* Load More button */
+    #loadMoreBtn {
+      display: block;
+      margin: 20px auto 0;
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #2a475e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 1px 1px 5px #666;
+      transition: background-color 0.3s ease;
+    }
+    #loadMoreBtn:hover {
+      background-color: #3b5e7a;
+    }
+
+    /* Container for toggle and sort */
+    .controls {
+      display: grid;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+ </style>
+</head>
+<body>
+
+  <h1>Study Resources & Mentor Videos</h1>
+
+  <div class="search-section" style="position:relative;">
+    <input type="text" id="searchInput" placeholder="Enter topic e.g. python, java, math" autocomplete="off" />
+    <button id="searchBtn">Search</button>
+    <select id="sortSelect" title="Sort Books">
+      <option value="relevance">Sort by Relevance</option>
+      <option value="title">Sort by Title (A-Z)</option>
+      <option value="yearAsc">Sort by Year Ascending</option>
+      <option value="yearDesc">Sort by Year Descending</option>
+    </select>
+  </div>
+
+  <div class="controls">
+    <label><input type="radio" name="displayType" value="grid" checked /> Grid View</label>
+    <label><input type="radio" name="displayType" value="list"  /> List View</label>
+  </div>
+
+  <div id="autocompleteList" class="autocomplete-suggestions" style="display:none;"></div>
+
+  <div id="results" class="grid"></div>
+  <button id="loadMoreBtn" style="display:none;">Load More</button>
+
+  <h2 style="margin-top:40px; text-align:center; color:#2a475e;">Mentor & Tutorial Videos (YouTube)</h2>
+  <div id="videoResults"></div>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const resultsDiv = document.getElementById('results');
+  const videoResults = document.getElementById('videoResults');
+  const searchBtn = document.getElementById('searchBtn');
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  const sortSelect = document.getElementById('sortSelect');
+  const autocompleteList = document.getElementById('autocompleteList');
+  let displayType = 'grid';
+  let currentQuery = '';
+  let currentPage = 1;
+  const limit = 10;
+  let booksData = [];
+
+  const YOUTUBE_API_KEY = 'AIzaSyCokkm7Xjb1w6wg16JNaayC8qWzUWIipgw'; // Replace with your YouTube API key
+
+  // Trie implementation for autocomplete
+  class TrieNode {
+    constructor() {
+      this.children = {};
+      this.isEndOfWord = false;
+    }
+  }
+  class Trie {
+    constructor() {
+      this.root = new TrieNode();
+    }
+    insert(word) {
+      let node = this.root;
+      for (const ch of word.toLowerCase()) {
+        if (!node.children[ch]) {
+          node.children[ch] = new TrieNode();
+        }
+        node = node.children[ch];
+      }
+      node.isEndOfWord = true;
+    }
+    startsWith(prefix) {
+      let node = this.root;
+      for (const ch of prefix.toLowerCase()) {
+        if (!node.children[ch]) return [];
+        node = node.children[ch];
+      }
+      const results = [];
+      this.dfs(node, prefix.toLowerCase(), results);
+      return results;
+    }
+    dfs(node, prefix, results) {
+      if (results.length >= 7) return; // Limit suggestions
+      if (node.isEndOfWord) results.push(prefix);
+      for (const ch in node.children) {
+        this.dfs(node.children[ch], prefix + ch, results);
+      }
+    }
+  }
+  const trie = new Trie();
+
+  // Helper: Sort books
+  function sortBooks(data, criteria) {
+    if (criteria === 'title') {
+      return data.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (criteria === 'yearAsc') {
+      return data.sort((a, b) => (a.first_publish_year || 0) - (b.first_publish_year || 0));
+    } else if (criteria === 'yearDesc') {
+      return data.sort((a, b) => (b.first_publish_year || 0) - (a.first_publish_year || 0));
+    }
+    return data; // relevance (default order)
+  }
+
+  // Show books in the selected display format and current page
+  function displayBooks() {
+    resultsDiv.className = displayType;
+    resultsDiv.innerHTML = '';
+    const sortedBooks = sortBooks([...booksData], sortSelect.value);
+    const pagedBooks = sortedBooks.slice(0, currentPage * limit);
+
+    if (pagedBooks.length === 0) {
+      resultsDiv.innerHTML = '<p>No books found.</p>';
+      loadMoreBtn.style.display = 'none';
+      return;
+    }
+
+    for (const book of pagedBooks) {
+      const title = book.title || 'No title';
+      const authors = book.author_name ? book.author_name.join(', ') : 'Unknown author';
+      const firstPublished = book.first_publish_year || 'Unknown year';
+      const coverId = book.cover_i;
+
+      const coverImg = coverId
+        ? `<img src="https://covers.openlibrary.org/b/id/${coverId}-M.jpg" alt="Book cover" />`
+        : `<div style="width: 80px; height: 100px; background:#ccc; display:flex; align-items:center; justify-content:center; color:#666; border-radius:5px;">No Cover</div>`;
+
+      const bookDiv = document.createElement('div');
+      bookDiv.className = 'book';
+      bookDiv.innerHTML = displayType === 'grid'
+        ? `${coverImg}<div><h3>${title}</h3><p><strong>Author(s):</strong> ${authors}</p><p><strong>First Published:</strong> ${firstPublished}</p></div>`
+        : `<div>${coverImg}</div><div><h3>${title}</h3><p><strong>Author(s):</strong> ${authors}</p><p><strong>First Published:</strong> ${firstPublished}</p></div>`;
+
+      resultsDiv.appendChild(bookDiv);
+    }
+
+    loadMoreBtn.style.display = pagedBooks.length < sortedBooks.length ? 'block' : 'none';
+  }
+
+  // Search books
+  async function searchBooks(query) {
+    if (!query) {
+      resultsDiv.innerHTML = '';
+      booksData = [];
+      loadMoreBtn.style.display = 'none';
+      return;
+    }
+    resultsDiv.innerHTML = 'Loading books...';
+    currentPage = 1;
+    currentQuery = query;
+
+    try {
+      const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=50`);
+      const data = await response.json();
+
+      booksData = data.docs || [];
+      // Insert titles to Trie for autocomplete
+      booksData.forEach(book => {
+        if (book.title) trie.insert(book.title);
+      });
+      displayBooks();
+
+    } catch (error) {
+      resultsDiv.innerHTML = '<p style="color:red;">Error loading books.</p>';
+      console.error(error);
+    }
+  }
+
+  // Load more books
+  loadMoreBtn.addEventListener('click', () => {
+    currentPage++;
+    displayBooks();
+  });
+
+  // Display YouTube videos based on search query
+  async function fetchYouTubeVideos(query) {
+    videoResults.innerHTML = 'Loading videos...';
+
+    if (!query) {
+      videoResults.innerHTML = '';
+      return;
+    }
+
+    const url = `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&type=video&part=snippet&q=${encodeURIComponent(query)}&maxResults=6`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.error) {
+        videoResults.innerHTML = `<p style="color:red;">${data.error.message}</p>`;
+        return;
+      }
+
+      if (!data.items || data.items.length === 0) {
+        videoResults.innerHTML = '<p>No videos found.</p>';
+        return;
+      }
+
+      videoResults.innerHTML = data.items.map(video => {
+        const videoId = video.id.videoId;
+        const title = video.snippet.title;
+        const thumbnail = video.snippet.thumbnails.medium.url;
+        const channel = video.snippet.channelTitle;
+
+        return `
+          <div onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')"
+               style="cursor:pointer;">
+            <img src="${thumbnail}" alt="${title}" />
+            <div>
+              <h4>${title}</h4>
+              <p>Channel: ${channel}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      videoResults.innerHTML = '<p style="color:red;">Error loading videos.</p>';
+      console.error(error);
+    }
+  }
+
+  // Autocomplete functionality
+
+  searchInput.addEventListener('input', () => {
+    const val = searchInput.value.trim();
+    if (!val) {
+      autocompleteList.style.display = 'none';
+      autocompleteList.innerHTML = '';
+      return;
+    }
+    const suggestions = trie.startsWith(val).slice(0, 7);
+    if (suggestions.length === 0) {
+      autocompleteList.style.display = 'none';
+      autocompleteList.innerHTML = '';
+      return;
+    }
+    autocompleteList.innerHTML = suggestions.map(s => `<div class="autocomplete-suggestion">${s}</div>`).join('');
+    autocompleteList.style.display = 'block';
+  });
+
+  autocompleteList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('autocomplete-suggestion')) {
+      searchInput.value = e.target.textContent;
+      autocompleteList.style.display = 'none';
+      searchBooks(searchInput.value);
+      fetchYouTubeVideos(searchInput.value + " tutorial");
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target !== searchInput && e.target.parentNode !== autocompleteList) {
+      autocompleteList.style.display = 'none';
+    }
+  });
+
+  // Search button click
+  searchBtn.addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    searchBooks(query);
+    fetchYouTubeVideos(query + " tutorial");
+  });
+
+  // Enter key triggers search
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      searchBtn.click();
+    }
+  });
+
+  // Toggle display type
+  document.querySelectorAll('input[name="displayType"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      displayType = e.target.value;
+      displayBooks();
+    });
+  });
+
+  // Sort change
+  sortSelect.addEventListener('change', () => {
+    displayBooks();
+  });
+
+  // Auto-search YouTube videos while typing (debounced)
+  let debounceTimer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const query = searchInput.value.trim();
+    debounceTimer = setTimeout(() => {
+      fetchYouTubeVideos(query + " tutorial");
+    }, 800);
+  });
+</script>
+
+</body>
+</html>
+-->
+
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Study Resources & Mentor Videos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #2a475e;
+    }
+    .search-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 300px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-shadow: inset 1px 1px 5px #ddd;
+    }
+    button {
+      padding: 10px 18px;
+      background-color: #2a475e;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      box-shadow: 1px 1px 5px #aaa;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #3b5e7a;
+    }
+    select {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-shadow: inset 1px 1px 5px #ddd;
+      cursor: pointer;
+    }
+    .autocomplete-suggestions {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      max-height: 200px;
+      overflow-y: auto;
+      width: 300px;
+      z-index: 1000;
+      border-radius: 0 0 5px 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .autocomplete-suggestion {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.2s;
+    }
+    .autocomplete-suggestion:last-child {
+      border-bottom: none;
+    }
+    .autocomplete-suggestion:hover, .autocomplete-suggestion.active {
+      background-color: #f0f7ff;
+    }
+
+    /* Results styles */
+    #results, #videoResults {
+      margin-top: 20px;
+    }
+    #results.grid .book {
+      display: inline-block;
+      vertical-align: top;
+      width: calc(50% - 20px);
+      margin: 10px;
+    }
+    #results.list .book {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .book {
+      border: 1px solid #ddd;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 1px 1px 5px #ccc;
+    }
+    .book img {
+      max-height: 120px;
+      border-radius: 5px;
+    }
+    .book div {
+      margin-left: 15px;
+    }
+    .book h3 {
+      margin: 0 0 8px;
+      color: #2a475e;
+    }
+    .book p {
+      margin: 4px 0;
+      color: #555;
+    }
+
+    /* Video results */
+    #videoResults > div {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      padding: 12px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    #videoResults img {
+      width: 160px;
+      border-radius: 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    #videoResults h4 {
+      margin: 0 0 8px;
+      color: #2a475e;
+    }
+    #videoResults p {
+      margin: 0;
+      color: #666;
+    }
+
+    /* Load More button */
+    #loadMoreBtn {
+      display: block;
+      margin: 20px auto 0;
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #2a475e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 1px 1px 5px #666;
+      transition: background-color 0.3s ease;
+    }
+    #loadMoreBtn:hover {
+      background-color: #3b5e7a;
+    }
+
+    /* Container for toggle and sort */
+    .controls {
+      display: grid;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+ </style>
+</head>
+<body>
+
+  <h1>Study Resources & Mentor Videos</h1>
+
+  <div class="search-section" style="position:relative;">
+    <input type="text" id="searchInput" placeholder="Enter topic e.g. python, java, math" autocomplete="off" />
+    <button id="searchBtn">Search</button>
+    <select id="sortSelect" title="Sort Books">
+      <option value="relevance">Sort by Relevance</option>
+      <option value="title">Sort by Title (A-Z)</option>
+      <option value="yearAsc">Sort by Year Ascending</option>
+      <option value="yearDesc">Sort by Year Descending</option>
+    </select>
+  </div>
+
+  <div class="controls">
+    <label><input type="radio" name="displayType" value="grid" checked /> Grid View</label>
+    <label><input type="radio" name="displayType" value="list"  /> List View</label>
+  </div>
+
+  <div id="autocompleteList" class="autocomplete-suggestions" style="display:none;"></div>
+
+  <div id="results" class="grid"></div>
+  <button id="loadMoreBtn" style="display:none;">Load More</button>
+
+  <h2 style="margin-top:40px; text-align:center; color:#2a475e;">Mentor & Tutorial Videos (YouTube)</h2>
+  <div id="videoResults"></div>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const resultsDiv = document.getElementById('results');
+  const videoResults = document.getElementById('videoResults');
+  const searchBtn = document.getElementById('searchBtn');
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  const sortSelect = document.getElementById('sortSelect');
+  const autocompleteList = document.getElementById('autocompleteList');
+  let displayType = 'grid';
+  let currentQuery = '';
+  let currentPage = 1;
+  const limit = 10;
+  let booksData = [];
+
+  const YOUTUBE_API_KEY = 'AIzaSyCokkm7Xjb1w6wg16JNaayC8qWzUWIipgw'; // Replace with your YouTube API key
+
+  // Trie implementation for autocomplete
+  class TrieNode {
+    constructor() {
+      this.children = {};
+      this.isEndOfWord = false;
+    }
+  }
+  class Trie {
+    constructor() {
+      this.root = new TrieNode();
+    }
+    insert(word) {
+      let node = this.root;
+      for (const ch of word.toLowerCase()) {
+        if (!node.children[ch]) {
+          node.children[ch] = new TrieNode();
+        }
+        node = node.children[ch];
+      }
+      node.isEndOfWord = true;
+    }
+    startsWith(prefix) {
+      let node = this.root;
+      for (const ch of prefix.toLowerCase()) {
+        if (!node.children[ch]) return [];
+        node = node.children[ch];
+      }
+      const results = [];
+      this.dfs(node, prefix.toLowerCase(), results);
+      return results;
+    }
+    dfs(node, prefix, results) {
+      if (results.length >= 7) return; // Limit suggestions
+      if (node.isEndOfWord) results.push(prefix);
+      for (const ch in node.children) {
+        this.dfs(node.children[ch], prefix + ch, results);
+      }
+    }
+  }
+  const trie = new Trie();
+
+  // Pre-populate the trie with common educational topics
+  const commonTopics = [
+    "python", "java", "javascript", "c++", "c#", "ruby", "php", "swift", 
+    "kotlin", "go", "rust", "typescript", "html", "css", "react", "angular",
+    "vue", "node.js", "django", "flask", "spring", "laravel", "machine learning",
+    "data science", "artificial intelligence", "algorithms", "data structures",
+    "computer science", "mathematics", "physics", "chemistry", "biology",
+    "statistics", "calculus", "linear algebra", "discrete math", "database",
+    "sql", "mongodb", "postgresql", "aws", "docker", "kubernetes", "git"
+  ];
+  commonTopics.forEach(topic => trie.insert(topic));
+
+  // Helper: Sort books
+  function sortBooks(data, criteria) {
+    if (criteria === 'title') {
+      return data.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (criteria === 'yearAsc') {
+      return data.sort((a, b) => (a.first_publish_year || 0) - (b.first_publish_year || 0));
+    } else if (criteria === 'yearDesc') {
+      return data.sort((a, b) => (b.first_publish_year || 0) - (a.first_publish_year || 0));
+    }
+    return data; // relevance (default order)
+  }
+
+  // Show books in the selected display format and current page
+  function displayBooks() {
+    resultsDiv.className = displayType;
+    resultsDiv.innerHTML = '';
+    const sortedBooks = sortBooks([...booksData], sortSelect.value);
+    const pagedBooks = sortedBooks.slice(0, currentPage * limit);
+
+    if (pagedBooks.length === 0) {
+      resultsDiv.innerHTML = '<p>No books found.</p>';
+      loadMoreBtn.style.display = 'none';
+      return;
+    }
+
+    for (const book of pagedBooks) {
+      const title = book.title || 'No title';
+      const authors = book.author_name ? book.author_name.join(', ') : 'Unknown author';
+      const firstPublished = book.first_publish_year || 'Unknown year';
+      const coverId = book.cover_i;
+
+      const coverImg = coverId
+        ? `<img src="https://covers.openlibrary.org/b/id/${coverId}-M.jpg" alt="Book cover" />`
+        : `<div style="width: 80px; height: 100px; background:#ccc; display:flex; align-items:center; justify-content:center; color:#666; border-radius:5px;">No Cover</div>`;
+
+      const bookDiv = document.createElement('div');
+      bookDiv.className = 'book';
+      bookDiv.innerHTML = displayType === 'grid'
+        ? `${coverImg}<div><h3>${title}</h3><p><strong>Author(s):</strong> ${authors}</p><p><strong>First Published:</strong> ${firstPublished}</p></div>`
+        : `<div>${coverImg}</div><div><h3>${title}</h3><p><strong>Author(s):</strong> ${authors}</p><p><strong>First Published:</strong> ${firstPublished}</p></div>`;
+
+      resultsDiv.appendChild(bookDiv);
+    }
+
+    loadMoreBtn.style.display = pagedBooks.length < sortedBooks.length ? 'block' : 'none';
+  }
+
+  // Search books
+  async function searchBooks(query) {
+    if (!query) {
+      resultsDiv.innerHTML = '';
+      booksData = [];
+      loadMoreBtn.style.display = 'none';
+      return;
+    }
+    resultsDiv.innerHTML = 'Loading books...';
+    currentPage = 1;
+    currentQuery = query;
+
+    try {
+      const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=50`);
+      const data = await response.json();
+
+      booksData = data.docs || [];
+      // Insert titles to Trie for autocomplete
+      booksData.forEach(book => {
+        if (book.title) trie.insert(book.title);
+      });
+      displayBooks();
+
+    } catch (error) {
+      resultsDiv.innerHTML = '<p style="color:red;">Error loading books.</p>';
+      console.error(error);
+    }
+  }
+
+  // Load more books
+  loadMoreBtn.addEventListener('click', () => {
+    currentPage++;
+    displayBooks();
+  });
+
+  // Display YouTube videos based on search query
+  async function fetchYouTubeVideos(query) {
+    videoResults.innerHTML = 'Loading videos...';
+
+    if (!query) {
+      videoResults.innerHTML = '';
+      return;
+    }
+
+    const url = `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&type=video&part=snippet&q=${encodeURIComponent(query)}&maxResults=6`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.error) {
+        videoResults.innerHTML = `<p style="color:red;">${data.error.message}</p>`;
+        return;
+      }
+
+      if (!data.items || data.items.length === 0) {
+        videoResults.innerHTML = '<p>No videos found.</p>';
+        return;
+      }
+
+      videoResults.innerHTML = data.items.map(video => {
+        const videoId = video.id.videoId;
+        const title = video.snippet.title;
+        const thumbnail = video.snippet.thumbnails.medium.url;
+        const channel = video.snippet.channelTitle;
+
+        return `
+          <div onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')"
+               style="cursor:pointer;">
+            <img src="${thumbnail}" alt="${title}" />
+            <div>
+              <h4>${title}</h4>
+              <p>Channel: ${channel}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      videoResults.innerHTML = '<p style="color:red;">Error loading videos.</p>';
+      console.error(error);
+    }
+  }
+
+  // Position autocomplete list below search input
+  function positionAutocomplete() {
+    const inputRect = searchInput.getBoundingClientRect();
+    autocompleteList.style.top = `${inputRect.bottom + window.scrollY}px`;
+    autocompleteList.style.left = `${inputRect.left + window.scrollX}px`;
+    autocompleteList.style.width = `${inputRect.width}px`;
+  }
+
+  // Autocomplete functionality
+  searchInput.addEventListener('input', () => {
+    const val = searchInput.value.trim();
+    if (!val) {
+      autocompleteList.style.display = 'none';
+      autocompleteList.innerHTML = '';
+      return;
+    }
+    
+    const suggestions = trie.startsWith(val).slice(0, 7);
+    if (suggestions.length === 0) {
+      autocompleteList.style.display = 'none';
+      autocompleteList.innerHTML = '';
+      return;
+    }
+    
+    autocompleteList.innerHTML = suggestions.map(s => 
+      `<div class="autocomplete-suggestion">${s}</div>`
+    ).join('');
+    autocompleteList.style.display = 'block';
+    positionAutocomplete();
+  });
+
+  // Handle autocomplete suggestion selection
+  autocompleteList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('autocomplete-suggestion')) {
+      searchInput.value = e.target.textContent;
+      autocompleteList.style.display = 'none';
+      searchBooks(searchInput.value);
+      fetchYouTubeVideos(searchInput.value + " tutorial");
+    }
+  });
+
+  // Keyboard navigation for autocomplete
+  searchInput.addEventListener('keydown', (e) => {
+    const suggestions = document.querySelectorAll('.autocomplete-suggestion');
+    if (!suggestions.length) return;
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const active = document.querySelector('.autocomplete-suggestion.active');
+      if (active) {
+        active.classList.remove('active');
+        const next = active.nextElementSibling || suggestions[0];
+        next.classList.add('active');
+      } else {
+        suggestions[0].classList.add('active');
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const active = document.querySelector('.autocomplete-suggestion.active');
+      if (active) {
+        active.classList.remove('active');
+        const prev = active.previousElementSibling || suggestions[suggestions.length - 1];
+        prev.classList.add('active');
+      } else {
+        suggestions[suggestions.length - 1].classList.add('active');
+      }
+    } else if (e.key === 'Enter') {
+      if (document.querySelector('.autocomplete-suggestion.active')) {
+        e.preventDefault();
+        document.querySelector('.autocomplete-suggestion.active').click();
+      } else {
+        // Regular enter key behavior (perform search)
+        e.preventDefault();
+        searchBtn.click();
+      }
+    }
+  });
+
+  // Hide autocomplete when clicking elsewhere
+  document.addEventListener('click', (e) => {
+    if (e.target !== searchInput && e.target.parentNode !== autocompleteList) {
+      autocompleteList.style.display = 'none';
+    }
+  });
+
+  // Search button click
+  searchBtn.addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    searchBooks(query);
+    fetchYouTubeVideos(query + " tutorial");
+  });
+
+  // Enter key triggers search
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      searchBtn.click();
+    }
+  });
+
+  // Toggle display type
+  document.querySelectorAll('input[name="displayType"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      displayType = e.target.value;
+      displayBooks();
+    });
+  });
+
+  // Sort change
+  sortSelect.addEventListener('change', () => {
+    displayBooks();
+  });
+
+  // Auto-search YouTube videos while typing (debounced)
+  let debounceTimer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const query = searchInput.value.trim();
+    debounceTimer = setTimeout(() => {
+      fetchYouTubeVideos(query + " tutorial");
+    }, 800);
+  });
+
+  // Handle window resize to reposition autocomplete
+  window.addEventListener('resize', () => {
+    if (autocompleteList.style.display === 'block') {
+      positionAutocomplete();
+    }
+  });
+</script>
+
+</body>
+</html>-->
+
+
+<!--Final-->
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Study Resources & Mentor Videos</title>
+  <style>
+ body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 0;
+  margin: 0;
+ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+  min-height: 100vh;
+  color: #333;
+ }
+  
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 40px;
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 300;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  letter-spacing: 1px;
+}
+
+h2 {
+  text-align: center;
+  color: white;
+  font-size: 2rem;
+  font-weight: 300;
+  margin: 60px 0 30px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.search-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 30px;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+input[type="text"] {
+  padding: 15px 20px;
+  width: 350px;
+  border-radius: 25px;
+  border: none;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+input[type="text"]:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  background: white;
+}
+
+button {
+  padding: 15px 30px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border: none;
+  color: white;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(45deg, #764ba2, #667eea);
+}
+
+button:active {
+  transform: translateY(-1px);
+}
+
+select {
+  padding: 15px 20px;
+  border-radius: 25px;
+  border: none;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+select:focus {
+  background: white;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  background: white;
+  border: none;
+  max-height: 250px;
+  overflow-y: auto;
+  width: 350px;
+  z-index: 1000;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  margin-top: 5px;
+}
+
+.autocomplete-suggestion {
+  padding: 15px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  font-size: 15px;
+}
+
+.autocomplete-suggestion:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-suggestion:hover, .autocomplete-suggestion.active {
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  color: white;
+  transform: translateX(5px);
+  border-radius: 30px;
+  width:70px;
+}
+
+/* Results styles */
+#results {
+  margin-top: 30px;
+}
+
+.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin: 0;
+}
+
+.list-view .book {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  padding: 20px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.list-view .book:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.book {
+  border: none;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.grid-view .book {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 320px;
+}
+
+.grid-view .book:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.book img {
+  max-height: 160px;
+  max-width: 120px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.grid-view .book img {
+  flex-shrink: 0;
+}
+
+.list-view .book img {
+  max-height: 120px;
+  max-width: 90px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.book h3 {
+  margin: 0 0 8px;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.book p {
+  margin: 4px 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.book p strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+/* Video results */
+#videoResults {
+  margin-top: 30px;
+}
+
+#videoResults > div {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 20px;
+  padding: 25px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+#videoResults > div:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+#videoResults img {
+  width: 180px;
+  height: 135px;
+  object-fit: cover;
+  border-radius: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+#videoResults img:hover {
+  transform: scale(1.05);
+}
+
+#videoResults h4 {
+  margin: 0 0 10px;
+  color: #2c3e50;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+#videoResults p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Load More button */
+#loadMoreBtn {
+  display: block;
+  margin: 40px auto 0;
+  padding: 15px 35px;
+  font-size: 16px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#loadMoreBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Container for toggle and sort */
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.view-toggle {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.view-toggle label {
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 10px 15px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.view-toggle label:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.view-toggle input[type="radio"] {
+  margin-right: 8px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+  }
+  
+  .search-section {
+    padding: 20px;
+    flex-direction: column;
+  }
+  
+  input[type="text"] {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .autocomplete-suggestions {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .grid-view {
+    grid-template-columns: 1fr;
+  }
+  
+  #videoResults > div {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  #videoResults img {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+  }
+  
+  .controls {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* Loading states */
+#results:empty::after {
+  content: "";
+  display: block;
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #764ba2, #667eea);
+}
+ </style>
+</head>
+<body>
+ 
+  <h1>Study Resources & Mentor Videos</h1>
+
+  <div class="search-section" style="position:relative;">
+    <input type="text" id="searchInput" placeholder="Enter topic e.g. python, java, math" autocomplete="off" />
+    <button id="searchBtn">Search</button>
+    <select id="sortSelect" title="Sort Books">
+      <option value="relevance">Sort by Relevance</option>
+      <option value="title">Sort by Title (A-Z)</option>
+      <option value="yearAsc">Sort by Year Ascending</option>
+      <option value="yearDesc">Sort by Year Descending</option>
+    </select>
+  </div>
+
+  <div class="controls">
+    <div class="view-toggle">
+      <label><input type="radio" name="displayType" value="grid" checked /> Grid View</label>
+      <label><input type="radio" name="displayType" value="list" /> List View</label>
+    </div>
+  </div>
+
+  <div id="autocompleteList" class="autocomplete-suggestions" style="display:none;"></div>
+
+  <div id="results" class="grid-view"></div>
+  <button id="loadMoreBtn" style="display:none;">Load More</button>
+
+  <h2 style="margin-top:40px; text-align:center; color:#2a475e;">Mentor & Tutorial Videos (YouTube)</h2>
+  <div id="videoResults"></div>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const resultsDiv = document.getElementById('results');
+  const videoResults = document.getElementById('videoResults');
+  const searchBtn = document.getElementById('searchBtn');
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  const sortSelect = document.getElementById('sortSelect');
+  const autocompleteList = document.getElementById('autocompleteList');
+  let displayType = 'grid';
+  let currentQuery = '';
+  let currentPage = 1;
+  const limit = 10;
+  let booksData = [];
+
+  const YOUTUBE_API_KEY = 'AIzaSyCokkm7Xjb1w6wg16JNaayC8qWzUWIipgw'; // Replace with your YouTube API key
+
+  // Trie implementation for autocomplete
+  class TrieNode {
+    constructor() {
+      this.children = {};
+      this.isEndOfWord = false;
+    }
+  }
+  class Trie {
+    constructor() {
+      this.root = new TrieNode();
+    }
+    insert(word) {
+      let node = this.root;
+      for (const ch of word.toLowerCase()) {
+        if (!node.children[ch]) {
+          node.children[ch] = new TrieNode();
+        }
+        node = node.children[ch];
+      }
+      node.isEndOfWord = true;
+    }
+    startsWith(prefix) {
+      let node = this.root;
+      for (const ch of prefix.toLowerCase()) {
+        if (!node.children[ch]) return [];
+        node = node.children[ch];
+      }
+      const results = [];
+      this.dfs(node, prefix.toLowerCase(), results);
+      return results;
+    }
+    dfs(node, prefix, results) {
+      if (results.length >= 7) return; // Limit suggestions
+      if (node.isEndOfWord) results.push(prefix);
+      for (const ch in node.children) {
+        this.dfs(node.children[ch], prefix + ch, results);
+      }
+    }
+  }
+  const trie = new Trie();
+
+  // Pre-populate the trie with common educational topics
+  const commonTopics = [
+    "python", "java", "javascript", "c++", "c#", "ruby", "php", "swift", 
+    "kotlin", "go", "rust", "typescript", "html", "css", "react", "angular",
+    "vue", "node.js", "django", "flask", "spring", "laravel", "machine learning",
+    "data science", "artificial intelligence", "algorithms", "data structures",
+    "computer science", "mathematics", "physics", "chemistry", "biology",
+    "statistics", "calculus", "linear algebra", "discrete math", "database",
+    "sql", "mongodb", "postgresql", "aws", "docker", "kubernetes", "git"
+  ];
+  commonTopics.forEach(topic => trie.insert(topic));
+
+  // Helper: Sort books
+  function sortBooks(data, criteria) {
+    if (criteria === 'title') {
+      return data.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (criteria === 'yearAsc') {
+      return data.sort((a, b) => (a.first_publish_year || 0) - (b.first_publish_year || 0));
+    } else if (criteria === 'yearDesc') {
+      return data.sort((a, b) => (b.first_publish_year || 0) - (a.first_publish_year || 0));
+    }
+    return data; // relevance (default order)
+  }
+
+  // Show books in the selected display format and current page
+  function displayBooks() {
+    // Clear previous results
+    resultsDiv.innerHTML = '';
+    
+    // Set the correct class for view type
+    resultsDiv.className = displayType === 'grid' ? 'grid-view' : 'list-view';
+    
+    const sortedBooks = sortBooks([...booksData], sortSelect.value);
+    const pagedBooks = sortedBooks.slice(0, currentPage * limit);
+
+    if (pagedBooks.length === 0) {
+      resultsDiv.innerHTML = '<p>No books found.</p>';
+      loadMoreBtn.style.display = 'none';
+      return;
+    }
+
+    for (const book of pagedBooks) {
+      const title = book.title || 'No title';
+      const authors = book.author_name ? book.author_name.join(', ') : 'Unknown author';
+      const firstPublished = book.first_publish_year || 'Unknown year';
+      const coverId = book.cover_i;
+
+      const coverImg = coverId
+        ? `<img src="https://covers.openlibrary.org/b/id/${coverId}-M.jpg" alt="Book cover" />`
+        : `<div style="width: 50px; height: 100px; background:#ccc; display:flex; align-items:center; justify-content:center; color:#666; border-radius:5px;">No Cover</div>`;
+
+      const bookDiv = document.createElement('div');
+      bookDiv.className = 'book';
+      
+      if (displayType === 'grid') {
+        bookDiv.innerHTML = `
+          ${coverImg}
+          <div>
+            <h3>${title}</h3>
+            <p><strong>Author(s):</strong> ${authors}</p>
+            <p><strong>First Published:</strong> ${firstPublished}</p>
+          </div>
+        `;
+      } else {
+        bookDiv.innerHTML = `
+          ${coverImg}
+          <div>
+            <h3>${title}</h3>
+            <p><strong>Author(s):</strong> ${authors}</p>
+            <p><strong>First Published:</strong> ${firstPublished}</p>
+          </div>
+        `;
+      }
+
+      resultsDiv.appendChild(bookDiv);
+    }
+
+    loadMoreBtn.style.display = pagedBooks.length < sortedBooks.length ? 'block' : 'none';
+  }
+
+  // Search books
+  async function searchBooks(query) {
+    if (!query) {
+      resultsDiv.innerHTML = '';
+      booksData = [];
+      loadMoreBtn.style.display = 'none';
+      return;
+    }
+    resultsDiv.innerHTML = 'Loading books...';
+    currentPage = 1;
+    currentQuery = query;
+
+    try {
+      const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=50`);
+      const data = await response.json();
+
+      booksData = data.docs || [];
+      // Insert titles to Trie for autocomplete
+      booksData.forEach(book => {
+        if (book.title) trie.insert(book.title);
+      });
+      displayBooks();
+
+    } catch (error) {
+      resultsDiv.innerHTML = '<p style="color:red;">Error loading books.</p>';
+      console.error(error);
+    }
+  }
+
+  // Load more books
+  loadMoreBtn.addEventListener('click', () => {
+    currentPage++;
+    displayBooks();
+  });
+
+  // Display YouTube videos based on search query
+  async function fetchYouTubeVideos(query) {
+    videoResults.innerHTML = 'Loading videos...';
+
+    if (!query) {
+      videoResults.innerHTML = '';
+      return;
+    }
+
+    const url = `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&type=video&part=snippet&q=${encodeURIComponent(query)}&maxResults=6`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.error) {
+        videoResults.innerHTML = `<p style="color:red;">${data.error.message}</p>`;
+        return;
+      }
+
+      if (!data.items || data.items.length === 0) {
+        videoResults.innerHTML = '<p>No videos found.</p>';
+        return;
+      }
+
+      videoResults.innerHTML = data.items.map(video => {
+        const videoId = video.id.videoId;
+        const title = video.snippet.title;
+        const thumbnail = video.snippet.thumbnails.medium.url;
+        const channel = video.snippet.channelTitle;
+
+        return `
+          <div onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')"
+               style="cursor:pointer;">
+            <img src="${thumbnail}" alt="${title}" />
+            <div>
+              <h4>${title}</h4>
+              <p>Channel: ${channel}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      videoResults.innerHTML = '<p style="color:red;">Error loading videos.</p>';
+      console.error(error);
+    }
+  }
+
+  // Position autocomplete list below search input
+  function positionAutocomplete() {
+    const inputRect = searchInput.getBoundingClientRect();
+    autocompleteList.style.top = `${inputRect.bottom + window.scrollY}px`;
+    autocompleteList.style.left = `${inputRect.left + window.scrollX}px`;
+    autocompleteList.style.width = `${inputRect.width}px`;
+  }
+
+  // Autocomplete functionality
+  searchInput.addEventListener('input', () => {
+    const val = searchInput.value.trim();
+    if (!val) {
+      autocompleteList.style.display = 'none';
+      autocompleteList.innerHTML = '';
+      return;
+    }
+    
+    const suggestions = trie.startsWith(val).slice(0, 7);
+    if (suggestions.length === 0) {
+      autocompleteList.style.display = 'none';
+      autocompleteList.innerHTML = '';
+      return;
+    }
+    
+    autocompleteList.innerHTML = suggestions.map(s => 
+      `<div class="autocomplete-suggestion">${s}</div>`
+    ).join('');
+    autocompleteList.style.display = 'block';
+    positionAutocomplete();
+  });
+
+  // Handle autocomplete suggestion selection
+  autocompleteList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('autocomplete-suggestion')) {
+      searchInput.value = e.target.textContent;
+      autocompleteList.style.display = 'none';
+      searchBooks(searchInput.value);
+      fetchYouTubeVideos(searchInput.value + " tutorial");
+    }
+  });
+
+  // Keyboard navigation for autocomplete
+  searchInput.addEventListener('keydown', (e) => {
+    const suggestions = document.querySelectorAll('.autocomplete-suggestion');
+    if (!suggestions.length) return;
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const active = document.querySelector('.autocomplete-suggestion.active');
+      if (active) {
+        active.classList.remove('active');
+        const next = active.nextElementSibling || suggestions[0];
+        next.classList.add('active');
+      } else {
+        suggestions[0].classList.add('active');
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const active = document.querySelector('.autocomplete-suggestion.active');
+      if (active) {
+        active.classList.remove('active');
+        const prev = active.previousElementSibling || suggestions[suggestions.length - 1];
+        prev.classList.add('active');
+      } else {
+        suggestions[suggestions.length - 1].classList.add('active');
+      }
+    } else if (e.key === 'Enter') {
+      if (document.querySelector('.autocomplete-suggestion.active')) {
+        e.preventDefault();
+        document.querySelector('.autocomplete-suggestion.active').click();
+      } else {
+        // Regular enter key behavior (perform search)
+        e.preventDefault();
+        searchBtn.click();
+      }
+    }
+  });
+
+  // Hide autocomplete when clicking elsewhere
+  document.addEventListener('click', (e) => {
+    if (e.target !== searchInput && e.target.parentNode !== autocompleteList) {
+      autocompleteList.style.display = 'none';
+    }
+  });
+
+  // Search button click
+  searchBtn.addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    searchBooks(query);
+    fetchYouTubeVideos(query + " tutorial");
+  });
+
+  // Enter key triggers search
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      searchBtn.click();
+    }
+  });
+
+  // Toggle display type
+  document.querySelectorAll('input[name="displayType"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      displayType = e.target.value;
+      displayBooks();
+    });
+  });
+
+  // Sort change
+  sortSelect.addEventListener('change', () => {
+    displayBooks();
+  });
+
+  // Auto-search YouTube videos while typing (debounced)
+  let debounceTimer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const query = searchInput.value.trim();
+    debounceTimer = setTimeout(() => {
+      fetchYouTubeVideos(query + " tutorial");
+    }, 800);
+  });
+
+  // Handle window resize to reposition autocomplete
+  window.addEventListener('resize', () => {
+    if (autocompleteList.style.display === 'block') {
+      positionAutocomplete();
+    }
+  });
+</script>
+
+</body>
+</html>-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Resources & Mentor Videos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+          /* Original Accent Colors (can be reused or adapted) */
+          --accent-color-1: #667eea;
+          --accent-color-2: #764ba2;
+
+          /* Dark Theme Variables */
+          --dark-bg-gradient-start: #141E30; /* Deep Navy Blue */
+          --dark-bg-gradient-end: #243B55;   /* Dark Slate Blue / Charcoal */
+          
+          --dark-card-bg: rgba(45, 55, 72, 0.7); /* For semi-transparent cards with blur */
+          --dark-solid-card-bg: #2D3748; /* For solid cards like book/video items */
+          --dark-card-border: rgba(255, 255, 255, 0.1);
+          --dark-card-shadow: rgba(0, 0, 0, 0.3);
+
+          --dark-text-primary: #E2E8F0; /* Main light text */
+          --dark-text-secondary: #A0AEC0; /* Softer light text */
+          --dark-text-headings-on-card: #CED4DA; /* For h3, h4 on dark cards */
+
+
+          --dark-input-bg: rgba(26, 32, 44, 0.8); /* Darker input */
+          --dark-input-focus-bg: #1A202C;
+          --dark-input-border: #4A5568;
+          --dark-input-placeholder: #718096;
+
+          --dark-button-gradient-1: var(--accent-color-1);
+          --dark-button-gradient-2: var(--accent-color-2);
+          --dark-button-hover-gradient-1: var(--accent-color-2);
+          --dark-button-hover-gradient-2: var(--accent-color-1);
+
+          --dark-scrollbar-track: rgba(0,0,0,0.2);
+          --dark-scrollbar-thumb-start: var(--accent-color-1);
+          --dark-scrollbar-thumb-end: var(--accent-color-2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 0;
+            margin: 0;
+            background: linear-gradient(135deg, var(--dark-bg-gradient-start), var(--dark-bg-gradient-end));
+            min-height: 100vh;
+            color: var(--dark-text-primary); /* Default text color for dark theme */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative; /* Added for potential relative children, not strictly necessary for this fix */
+            z-index: 1; /* Ensure container is above animated-bg */
+          background:  rgba(20, 30, 48, 0.8);
+          /*background: 	rgba(31, 43, 63,0.9);*/
+         /* background: linear-gradient(135deg, rgba(20, 30, 48, 0.2), rgba(31, 43, 63,0));*/
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            80% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white; 
+            font-size: 3.5rem;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+            letter-spacing: 1px;
+            opacity: 0; /* For animation */
+            animation: fadeInDown 0.6s 0.2s ease-out forwards;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        h2 {
+            text-align: center;
+            color: white; 
+            font-size: 2rem;
+            font-weight: 300;
+            margin: 60px 0 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            opacity: 0; /* For animation */
+            animation: fadeInDown 0.5s 0.3s ease-out forwards; /* Stagger after previous elements */
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+.back-button {
+   background: linear-gradient(to right, #8b6f20, #c49e2c);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(4, 2, 116, 0.3);
+        }
+        .Btn1 {
+            padding: 15px 30px;
+           /* background: linear-gradient(135deg, #ffe259, #ffa751);*/
+     background: linear-gradient(to right, #8b6f20, #c49e2c);
+            border: none;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 650px;
+        }
+
+        .Btn1:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); 
+            
+           /*background: linear-gradient(135deg, #2b5876, #4e4376);*/
+           background: linear-gradient(to right, #996515, #e6ac00);
+        }
+        .search-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 30px;
+            justify-content: center;
+          /*  background: var(--dark-card-bg);
+            backdrop-filter: blur(10px);*/
+            
+           background: linear-gradient(135deg, #2b5876, #4e4376);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px var(--dark-card-shadow);
+            border: 1px solid var(--dark-card-border);
+            opacity: 0; /* For animation */
+            animation: popIn 0.6s 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+             /* position: relative; NO LONGER NEEDED HERE FOR AUTOCOMPLETE */
+        }
+
+        /* Staggered animation for search section children */
+        .search-section > * {
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+        .search-section > input[type="text"] { animation-delay: 0.6s; }
+        .search-section > button { animation-delay: 0.65s; }
+        .search-section > select { animation-delay: 0.7s; }
+
+
+        input[type="text"] {
+            padding: 15px 20px;
+            width: 350px;
+            border-radius: 25px;
+            border: 1px solid var(--dark-input-border);
+            font-size: 16px;
+            background: var(--dark-input-bg);
+            color: var(--dark-text-primary);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        input[type="text"]::placeholder {
+            color: var(--dark-input-placeholder);
+        }
+
+        input[type="text"]:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+            background: var(--dark-input-focus-bg);
+            border-color: var(--accent-color-1);
+        }
+
+        button {
+            padding: 15px 30px;
+           /* background: linear-gradient(135deg, #ffe259, #ffa751);*/
+     background: linear-gradient(to right, #8b6f20, #c49e2c);
+            border: none;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); 
+            
+           /*background: linear-gradient(135deg, #2b5876, #4e4376);*/
+           background: linear-gradient(to right, #996515, #e6ac00);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        select {
+            padding: 15px 20px;
+            border-radius: 25px;
+            border: 1px solid var(--dark-input-border);
+            font-size: 16px;
+           /*background: var(--dark-input-bg);*/
+           background: linear-gradient(to right, #8b6f20, #c49e2c);
+            color: var(--dark-text-primary);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        select option { 
+            background-color: var(--dark-solid-card-bg);
+            color: var(--dark-text-primary);
+        }
+
+        select:focus {
+            background: var(--dark-input-focus-bg);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+            border-color: var(--accent-color-1);
+        }
+
+        .autocomplete-suggestions {
+            position: absolute; /* Positioned relative to body/viewport */
+            background: var(--dark-solid-card-bg);
+            border: 1px solid var(--dark-card-border);
+            max-height: 250px;
+            overflow-y: auto;
+            width: 350px; 
+            z-index: 1000; /* High z-index to be on top */
+            border-radius: 15px;
+            box-shadow: 0 10px 40px var(--dark-card-shadow);
+            margin-top: 5px; /* Default margin, JS will set top precisely */
+        }
+
+        .autocomplete-suggestion {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--dark-card-border);
+            transition: all 0.2s ease;
+            font-size: 15px;
+            color: var(--dark-text-secondary);
+        }
+
+        .autocomplete-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-suggestion:hover, .autocomplete-suggestion.active {
+           /* background: linear-gradient(90deg, var(--accent-color-1), var(--accent-color-2));*/
+           background: linear-gradient(to right, #b8860b, #daa520);
+            color: white;
+        }
+
+        /* Results styles */
+        #results {
+            margin-top: 30px;
+        }
+
+        .grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 0;
+        }
+
+        .list-view .book {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            background: var(--dark-solid-card-bg);
+            box-shadow: 0 2px 8px var(--dark-card-shadow);
+            opacity: 0; 
+            animation: popIn 0.4s ease-out forwards;
+        }
+
+        .list-view .book:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .book { 
+            border: none;
+            padding: 15px;
+           background: linear-gradient(135deg, #2b5876, #4e4376);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--dark-card-shadow);
+        }
+
+        .grid-view .book {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 320px;
+            opacity: 0; 
+            animation: popIn 0.4s ease-out forwards;
+        }
+        .grid-view .book:nth-child(1) { animation-delay: 0.1s; }
+        .grid-view .book:nth-child(2) { animation-delay: 0.15s; }
+        .grid-view .book:nth-child(3) { animation-delay: 0.2s; }
+        .grid-view .book:nth-child(4) { animation-delay: 0.25s; }
+
+
+        .grid-view .book:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        .book img {
+            max-height: 160px;
+            max-width: 120px; 
+            object-fit: contain; 
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); 
+        }
+
+        .grid-view .book img { 
+            flex-shrink: 0;
+        }
+
+        .list-view .book img {
+            max-height: 120px;
+            max-width: 90px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .book h3 {
+            margin: 0 0 8px;
+            color: var(--dark-text-headings-on-card);
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .book p {
+            margin: 4px 0;
+            color: var(--dark-text-secondary);
+            font-size: 18px;
+            line-height: 1.4;
+        }
+        .book p strong {
+            color: var(--dark-text-headings-on-card);
+            font-weight: 600;
+        }
+
+
+        /* Video results */
+        #videoResults {
+            margin-top: 30px;
+        }
+
+        #videoResults > div { 
+             background: linear-gradient(135deg, #2b5876, #4e4376);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px var(--dark-card-shadow);
+            border: 1px solid var(--dark-card-border);
+            margin-bottom: 20px;
+            padding: 25px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            transition: all 0.3s ease; 
+            cursor: pointer;
+            opacity: 0; 
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+        #videoResults > div:nth-child(1) { animation-delay: 0.1s; }
+        #videoResults > div:nth-child(2) { animation-delay: 0.15s; }
+        #videoResults > div:nth-child(3) { animation-delay: 0.2s; }
+
+
+        #videoResults > div:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        #videoResults img { 
+            width: 180px;  
+            height: 135px; 
+            object-fit: cover;
+            border-radius: 15px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #videoResults img:hover {
+            transform: scale(1.05);
+        }
+
+        #videoResults h4 { 
+            margin: 0 0 10px;
+            color: var(--dark-text-headings-on-card);
+            font-size: 1.8rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        #videoResults p { 
+            margin: 0;
+            color: var(--dark-text-secondary);
+            font-size: 18px;
+        }
+
+
+        /* Load More button */
+        #loadMoreBtn {
+            display: block;
+            margin: 40px auto 0;
+            padding: 15px 35px;
+            font-size: 16px;
+              background: linear-gradient(to right, #b8860b, #daa520);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0; 
+            animation: popIn 0.5s 0.2s ease-out forwards; 
+        }
+
+        #loadMoreBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+             background: linear-gradient(45deg, var(--dark-button-hover-gradient-1), var(--dark-button-hover-gradient-2));
+        }
+
+        /* Container for toggle and sort */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+           background: linear-gradient(135deg, #2b5876, #4e4376);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px var(--dark-card-shadow);
+            border: 1px solid var(--dark-card-border);
+            opacity: 0; 
+            animation: popIn 0.6s 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .controls > .view-toggle {
+            opacity: 0;
+            animation: fadeInUp 0.5s 0.7s ease-out forwards; 
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .view-toggle label {
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid var(--dark-card-border);
+        }
+        .view-toggle label:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        .view-toggle input[type="radio"]:checked + label { 
+            /* background: linear-gradient(120deg, #232526, #414345);*/
+              background: linear-gradient(to right, #8b6f20, #c49e2c);
+        }
+        .view-toggle input[type="radio"] {
+            display: none; 
+        }
+
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            h1 { font-size: 2rem; margin-bottom: 30px; }
+            .search-section { padding: 20px; flex-direction: column; }
+            input[type="text"] { width: 100%; max-width: none; }
+            select { width: 100%; max-width: none; }
+            .autocomplete-suggestions { width: 100% !important; max-width: none !important; left: 0 !important; box-sizing: border-box; } /* Adjusted for mobile */
+            .grid-view { grid-template-columns: 1fr; }
+            #videoResults > div { flex-direction: column; text-align: center; }
+            #videoResults img { width: 100%; max-width: 300px; height: auto; }
+            .controls { flex-direction: column; align-items: center; }
+        }
+        
+        .loading-placeholder {
+            text-align: center;
+            color: var(--dark-text-secondary); 
+            padding: 20px;
+            font-style: italic;
+            opacity: 0; 
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        html { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--dark-scrollbar-track); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(45deg, var(--dark-scrollbar-thumb-start), var(--dark-scrollbar-thumb-end)); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(45deg, var(--dark-scrollbar-thumb-end), var(--dark-scrollbar-thumb-start)); }
+    
+        /* Animated Background specific styles - already present and correct */
+        .animated-bg {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 0; /* Behind other content */
+          overflow: hidden;
+          pointer-events: none;
+        }
+        .animated-bg span.icon-float {
+            position: absolute;
+            bottom: -30px;
+            color: var(--animated-icon-color);
+            font-size: 20px;
+            opacity: 0;
+            animation: floatUpCareer 15s linear infinite;
+            user-select: none;
+        }
+        .icon-float.icon-lightbulb::before { content: "💡"; } .icon-float.icon-gear::before { content: "⚙️"; } .icon-float.icon-briefcase::before { content: "💼"; } .icon-float.icon-arrow::before { content: "📈"; } .icon-float.icon-cap::before { content: "🎓"; } .icon-float.icon-speech::before { content: "💬"; } .icon-float.icon-star::before { content: "⭐"; } .icon-float.icon-network::before { content: "🌐"; } .icon-float.icon-puzzle::before { content: "🧩"; } .icon-float.icon-target::before { content: "🎯"; } .icon-float.icon-pencil::before { content: "✏️"; } .icon-float.icon-rocket::before { content: "🚀"; }
+        @keyframes floatUpCareer {
+          0% { transform: translateY(0vh) translateX(0vw); opacity: 0; }
+          10%, 90% { opacity: 0.8; }
+          100% { transform: translateY(-110vh) translateX(calc(var(--drift-x, 0) * 2vw)); opacity: 0; }
+        }
+        .animated-bg span:nth-child(1) { left: 8%; animation-delay: 0s; font-size: 38px; --drift-x: -1.2; color: rgba(255,255,255,0.44);} .animated-bg span:nth-child(2) { left: 18%; animation-delay: 2.5s; font-size: 30px; --drift-x: 1; animation-duration: 18s; } .animated-bg span:nth-child(3) { left: 28%; animation-delay: 4s; font-size: 42px; --drift-x: -1.5; color: rgba(255,255,255,0.50);} .animated-bg span:nth-child(4) { left: 38%; animation-delay: 1s; font-size: 32px; --drift-x: 0.5; animation-duration: 13s; } .animated-bg span:nth-child(5) { left: 48%; animation-delay: 5s; font-size: 40px; --drift-x: -0.8; animation-duration: 20s; color: rgba(255,255,255,0.35);} .animated-bg span:nth-child(6) { left: 58%; animation-delay: 3s; font-size: 30px; --drift-x: 1.2; animation-duration: 16s; } .animated-bg span:nth-child(7) { left: 68%; animation-delay: 0.8s; font-size: 45px; --drift-x: -0.8; color: rgba(255,255,255,0.55);} .animated-bg span:nth-child(8) { left: 78%; animation-delay: 4.5s; font-size: 28px; --drift-x: 0.8; animation-duration: 14s; } .animated-bg span:nth-child(9) { left: 88%; animation-delay: 1.5s; font-size: 36px; --drift-x: -1.2; animation-duration: 19s; color: rgba(255,255,255,0.48);} .animated-bg span:nth-child(10) { left: 3%; animation-delay: 3.5s; font-size: 35px; --drift-x: 1.1; animation-duration: 17s; } .animated-bg span:nth-child(11) { left: 13%; animation-delay: 6s; font-size: 28px; --drift-x: -0.7; color: rgba(255,255,255,0.42);} .animated-bg span:nth-child(12) { left: 83%; animation-delay: 2s; font-size: 38px; --drift-x: 0.7; animation-duration: 15s; }
+    </style>
+</head>
+<body>
+ <div class="animated-bg"> 
+    <span class="icon-float icon-lightbulb"></span> <span class="icon-float icon-gear"></span> <span class="icon-float icon-briefcase"></span> <span class="icon-float icon-arrow"></span> <span class="icon-float icon-cap"></span> <span class="icon-float icon-speech"></span> <span class="icon-float icon-star"></span> <span class="icon-float icon-network"></span> <span class="icon-float icon-puzzle"></span> <span class="icon-float icon-target"></span> <span class="icon-float icon-pencil"></span> <span class="icon-float icon-rocket"></span>
+ </div>
+ <div class="container"> 
+  <h1>SkillSphere Learning Hub</h1>
+ <button class="back-button" onclick="window.location.href='profile.html'">← Back to Profile</button>
+     <button class="Btn1" onclick="window.location.href='JobTrends.html'">
+   <span class="logoIcon">📈</span>
+   <span class="tooltip">Job Trends</span>
+</button>
+  <div class="search-section">
+    <input type="text" id="searchInput" placeholder="Enter topic e.g. python, java, math" autocomplete="off" />
+    <button id="searchBtn">Search</button>
+    <select id="sortSelect" title="Sort Books">
+      <option value="relevance">Sort by Relevance</option>
+      <option value="title">Sort by Title (A-Z)</option>
+      <option value="yearAsc">Sort by Year Ascending</option>
+      <option value="yearDesc">Sort by Year Descending</option>
+    </select>
+    
+  </div>
+
+  <div class="controls">
+    <div class="view-toggle">
+      <input type="radio" name="displayType" value="grid" id="viewGrid" checked /> 
+      <label for="viewGrid">Grid View</label>
+      <input type="radio" name="displayType" value="list" id="viewList" />
+      <label for="viewList">List View</label>
+    </div>
+  </div>
+
+  <div id="results" class="grid-view">
+    
+  </div>
+  <button id="loadMoreBtn" style="display:none;">Load More</button>
+
+  <h2>Tutorial Videos (YouTube)</h2>
+  <div id="videoResults">
+     
+  </div>
+ </div> 
+
+ <div id="autocompleteList" class="autocomplete-suggestions" style="display:none;"></div> 
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const resultsDiv = document.getElementById('results');
+  const videoResults = document.getElementById('videoResults');
+  const searchBtn = document.getElementById('searchBtn');
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  const sortSelect = document.getElementById('sortSelect');
+  const autocompleteList = document.getElementById('autocompleteList');
+  let displayType = 'grid'; 
+  let currentQuery = '';
+  let currentPage = 1;
+  const booksPerPageLimit = 10; 
+  let booksData = [];
+
+  const YOUTUBE_API_KEY = 'AIzaSyCokkm7Xjb1w6wg16JNaayC8qWzUWIipgw'; // <<-- REPLACE THIS!
+
+  class TrieNode { 
+    constructor() { this.children = {}; this.isEndOfWord = false; }
+  }
+  class Trie { 
+    constructor() { this.root = new TrieNode(); }
+    insert(word) { let node = this.root; for (const ch of word.toLowerCase()) { if (!node.children[ch]) { node.children[ch] = new TrieNode(); } node = node.children[ch]; } node.isEndOfWord = true; }
+    startsWith(prefix) { let node = this.root; const lowerPrefix = prefix.toLowerCase(); for (const ch of lowerPrefix) { if (!node.children[ch]) return []; node = node.children[ch]; } const results = []; this._dfs(node, lowerPrefix, results); return results; }
+    _dfs(node, currentWord, results) { if (results.length >= 7) return; if (node.isEndOfWord) results.push(currentWord); for (const ch in node.children) { if (results.length >= 7) return; this._dfs(node.children[ch], currentWord + ch, results); } }
+  }
+  const trie = new Trie();
+  const commonTopics = [ "python", "java", "javascript", "c++", "c#", "ruby", "php", "swift", "kotlin", "go", "rust", "typescript", "html", "css", "react", "angular", "vue", "node.js", "django", "flask", "spring", "laravel", "machine learning", "data science", "artificial intelligence", "algorithms", "data structures", "computer science", "mathematics", "physics", "chemistry", "biology", "statistics", "calculus", "linear algebra", "discrete math", "database", "sql", "mongodb", "postgresql", "aws", "docker", "kubernetes", "git" ];
+  commonTopics.forEach(topic => trie.insert(topic));
+
+  function sortBooks(data, criteria) { 
+    const booksToSort = [...data]; 
+    if (criteria === 'title') { return booksToSort.sort((a, b) => (a.title || "").localeCompare(b.title || "")); } 
+    else if (criteria === 'yearAsc') { return booksToSort.sort((a, b) => (a.first_publish_year || Infinity) - (b.first_publish_year || Infinity)); } 
+    else if (criteria === 'yearDesc') { return booksToSort.sort((a, b) => (b.first_publish_year || 0) - (a.first_publish_year || 0)); }
+    return booksToSort; 
+  }
+
+  function displayBooks() {
+    // const isInitialLoad = resultsDiv.innerHTML.includes('loading-placeholder'); 
+    resultsDiv.innerHTML = ''; 
+    resultsDiv.className = displayType === 'grid' ? 'grid-view' : 'list-view';
+    
+    const sortedBooks = sortBooks(booksData, sortSelect.value);
+    const pagedBooks = sortedBooks.slice(0, currentPage * booksPerPageLimit);
+
+    if (pagedBooks.length === 0 && currentQuery) { 
+      resultsDiv.innerHTML = '<p class="loading-placeholder">No books found for your query.</p>';
+      loadMoreBtn.style.display = 'none';
+      return;
+    } else if (!currentQuery && booksData.length === 0) {
+        resultsDiv.innerHTML = '<p class="loading-placeholder">Enter a topic to search for books.</p>';
+        loadMoreBtn.style.display = 'none';
+        return;
+    }
+
+    pagedBooks.forEach((book, index) => {
+      const title = book.title || 'No title available';
+      const authors = book.author_name ? book.author_name.join(', ') : 'Unknown author';
+      const firstPublished = book.first_publish_year || 'N/A';
+      const coverId = book.cover_i;
+      const coverImgHTML = coverId
+        ? `<img src="https://covers.openlibrary.org/b/id/${coverId}-M.jpg" alt="Cover for ${title}" />`
+        : `<div style="width: 120px; height: 160px; background:#3e4a59; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--dark-text-secondary); border-radius:8px; font-size:12px; padding:5px;">No Cover</div>`;
+      const bookDiv = document.createElement('div');
+      bookDiv.className = 'book';
+      bookDiv.innerHTML = `
+        ${coverImgHTML}
+        <div>
+          <h3>${title}</h3>
+          <p><strong>Author(s):</strong> ${authors}</p>
+          <p><strong>First Published:</strong> ${firstPublished}</p>
+        </div>
+      `;
+      bookDiv.style.animationDelay = `${index * 0.05}s`; 
+      resultsDiv.appendChild(bookDiv);
+    });
+    loadMoreBtn.style.display = pagedBooks.length < sortedBooks.length ? 'block' : 'none';
+  }
+
+  async function searchBooksAndVideos(query) { 
+    if (!query) {
+        resultsDiv.innerHTML = '<p class="loading-placeholder">Please enter a search term.</p>';
+        videoResults.innerHTML = '<p class="loading-placeholder">Videos will appear after searching.</p>';
+        booksData = [];
+        loadMoreBtn.style.display = 'none';
+        return;
+    }
+    resultsDiv.innerHTML = '<p class="loading-placeholder">Loading books...</p>';
+    videoResults.innerHTML = '<p class="loading-placeholder">Loading videos...</p>';
+    currentPage = 1;
+    currentQuery = query;
+
+    try {
+      const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=50`);
+      if (!response.ok) throw new Error(`OpenLibrary API error: ${response.status}`);
+      const data = await response.json();
+      booksData = data.docs || [];
+      booksData.forEach(book => { if (book.title) trie.insert(book.title); });
+      displayBooks();
+    } catch (error) {
+      resultsDiv.innerHTML = `<p class="loading-placeholder" style="color:#ff6b6b;">Error loading books: ${error.message}</p>`;
+      console.error("Book search error:", error);
+      booksData = []; 
+      displayBooks(); 
+    }
+
+    if (YOUTUBE_API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE') {
+        videoResults.innerHTML = '<p class="loading-placeholder" style="color:#fab005;">YouTube API key not configured.</p>';
+        return;
+    }
+    const youtubeQuery = query + " tutorial for beginners"; 
+    const youtubeUrl = `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&type=video&part=snippet&q=${encodeURIComponent(youtubeQuery)}&maxResults=6`;
+    try {
+      const response = await fetch(youtubeUrl);
+      if (!response.ok) throw new Error(`YouTube API error: ${response.status}`);
+      const data = await response.json();
+
+      if (data.error) {
+        videoResults.innerHTML = `<p class="loading-placeholder" style="color:#ff6b6b;">YouTube API Error: ${data.error.message}</p>`;
+        console.error("YouTube API Error:", data.error);
+        return;
+      }
+      if (!data.items || data.items.length === 0) {
+        videoResults.innerHTML = '<p class="loading-placeholder">No videos found for this topic.</p>';
+        return;
+      }
+      videoResults.innerHTML = ''; 
+      data.items.forEach((video, index) => {
+        const videoId = video.id.videoId;
+        const title = video.snippet.title;
+        const thumbnail = video.snippet.thumbnails.medium.url;
+        const channel = video.snippet.channelTitle;
+        
+        const videoDiv = document.createElement('div');
+        videoDiv.onclick = () => window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+        videoDiv.innerHTML = `
+            <img src="${thumbnail}" alt="${title}" />
+            <div>
+              <h4>${title}</h4>
+              <p>Channel: ${channel}</p>
+            </div>
+        `;
+        videoDiv.style.animationDelay = `${index * 0.07}s`; 
+        videoResults.appendChild(videoDiv);
+      });
+    } catch (error) {
+      videoResults.innerHTML = `<p class="loading-placeholder" style="color:#ff6b6b;">Error loading videos: ${error.message}</p>`;
+      console.error("Video search error:", error);
+    }
+  }
+  
+  loadMoreBtn.addEventListener('click', () => { currentPage++; displayBooks(); });
+  
+  function positionAutocomplete() { 
+    const inputRect = searchInput.getBoundingClientRect();
+    // Now positions relative to the viewport, adjusted by scroll
+    autocompleteList.style.top = `${inputRect.bottom + window.scrollY + 5}px`; 
+    autocompleteList.style.left = `${inputRect.left + window.scrollX}px`;
+    autocompleteList.style.width = `${inputRect.width}px`;
+  }
+
+  searchInput.addEventListener('input', () => { 
+    const val = searchInput.value.trim();
+    activeSuggestionIndex = -1; 
+    if (!val) { autocompleteList.style.display = 'none'; autocompleteList.innerHTML = ''; return; }
+    const suggestions = trie.startsWith(val); 
+    if (suggestions.length === 0) { autocompleteList.style.display = 'none'; autocompleteList.innerHTML = ''; return; }
+    autocompleteList.innerHTML = suggestions.map(s => `<div class="autocomplete-suggestion">${s}</div>`).join('');
+    autocompleteList.style.display = 'block';
+    positionAutocomplete();
+  });
+  autocompleteList.addEventListener('click', (e) => { 
+    if (e.target.classList.contains('autocomplete-suggestion')) {
+      const selectedText = e.target.textContent;
+      searchInput.value = selectedText;
+      autocompleteList.style.display = 'none';
+      activeSuggestionIndex = -1;
+      searchBooksAndVideos(selectedText); 
+    }
+  });
+  
+  let activeSuggestionIndex = -1;
+  searchInput.addEventListener('keydown', (e) => { 
+    const suggestions = autocompleteList.querySelectorAll('.autocomplete-suggestion');
+    if (autocompleteList.style.display !== 'block' || !suggestions.length) {
+        if (e.key === 'Enter') { e.preventDefault(); searchBtn.click(); }
+        return;
+    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeSuggestionIndex++; if (activeSuggestionIndex >= suggestions.length) activeSuggestionIndex = 0; updateActiveSuggestion(suggestions); } 
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeSuggestionIndex--; if (activeSuggestionIndex < 0) activeSuggestionIndex = suggestions.length - 1; updateActiveSuggestion(suggestions); } 
+    else if (e.key === 'Enter') { e.preventDefault(); if (activeSuggestionIndex > -1 && suggestions[activeSuggestionIndex]) { suggestions[activeSuggestionIndex].click(); } else { searchBtn.click(); } activeSuggestionIndex = -1; } 
+    else if (e.key === 'Escape') { autocompleteList.style.display = 'none'; activeSuggestionIndex = -1; }
+  });
+  function updateActiveSuggestion(suggestions) { 
+    suggestions.forEach(s => s.classList.remove('active'));
+    if (suggestions[activeSuggestionIndex]) {
+        suggestions[activeSuggestionIndex].classList.add('active');
+        suggestions[activeSuggestionIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+  document.addEventListener('click', (e) => { 
+    if (e.target !== searchInput && !autocompleteList.contains(e.target)) {
+      autocompleteList.style.display = 'none';
+      activeSuggestionIndex = -1; 
+    }
+  });
+  searchBtn.addEventListener('click', () => { 
+    const query = searchInput.value.trim();
+    autocompleteList.style.display = 'none'; 
+    activeSuggestionIndex = -1;
+    searchBooksAndVideos(query);
+  });
+
+  document.querySelectorAll('input[name="displayType"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      displayType = e.target.value;
+      displayBooks(); 
+    });
+  });
+
+  sortSelect.addEventListener('change', () => { displayBooks(); });
+  
+  let videoDebounceTimer; 
+  searchInput.addEventListener('input', () => { 
+      // This listener for debounced video search runs in addition to the autocomplete 'input' listener.
+      // This is fine as they handle different aspects.
+      clearTimeout(videoDebounceTimer);
+      const query = searchInput.value.trim();
+      if (query.length > 2) { 
+          videoDebounceTimer = setTimeout(() => {
+              if (YOUTUBE_API_KEY !== 'YOUR_YOUTUBE_API_KEY_HERE' && searchInput.value.trim() === query) { 
+                 // fetchYouTubeVideos(query + " tutorial for beginners"); // Called by searchBooksAndVideos
+              }
+          }, 800);
+      } else if (query.length === 0) { 
+          // videoResults.innerHTML = '<p class="loading-placeholder">Videos will appear here after searching.</p>'; 
+      }
+  });
+
+
+  window.addEventListener('resize', () => { if (autocompleteList.style.display === 'block') { positionAutocomplete(); } });
+
+  resultsDiv.innerHTML = '<p class="loading-placeholder">Enter a topic to search for books.</p>';
+  videoResults.innerHTML = '<p class="loading-placeholder">Videos will appear here after searching.</p>';
+
+</script>
+
+</body>
+</html>

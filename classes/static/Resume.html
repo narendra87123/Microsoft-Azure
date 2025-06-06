@@ -1,0 +1,1562 @@
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Resume Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .resume-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            min-height: 800px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .add-btn {
+            background: #28a745;
+            font-size: 14px;
+            padding: 8px 16px;
+        }
+
+        .remove-btn {
+            background: #dc3545;
+            font-size: 12px;
+            padding: 6px 12px;
+            margin-left: 10px;
+        }
+
+        .dynamic-section {
+            border: 2px dashed #e1e5e9;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .section-header {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            margin: -30px -30px 20px -30px;
+            border-radius: 15px 15px 0 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Resume Styles */
+        .resume {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .resume-header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            margin-bottom: 25px;
+        }
+
+        .resume-name {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .resume-title {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 14px;
+        }
+
+        .resume-section-title {
+            font-size: 20px;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+            margin: 25px 0 15px 0;
+            font-weight: 600;
+        }
+
+        .experience-item, .education-item, .project-item {
+            margin-bottom: 20px;
+            padding-left: 20px;
+            border-left: 3px solid #e1e5e9;
+        }
+
+        .item-header {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .item-company {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .item-date {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .skill-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .summary-text {
+            font-style: italic;
+            color: #555;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .optimization-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            transform: translateX(300px);
+            transition: transform 0.3s;
+        }
+
+        .optimization-indicator.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .achievement-bullet {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+        }
+
+        .achievement-bullet::before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="optimization-indicator" id="optimizationIndicator">
+        Resume Optimized! 🚀
+    </div>
+
+    <div class="container">
+        <div class="form-section">
+            <div class="section-header">Resume Builder</div>
+            
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="fullName" placeholder="John Doe">
+            </div>
+
+            <div class="form-group">
+                <label>Professional Title</label>
+                <input type="text" id="title" placeholder="Software Engineer">
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="john@example.com">
+            </div>
+
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" id="phone" placeholder="+1 (555) 123-4567">
+            </div>
+
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="location" placeholder="San Francisco, CA">
+            </div>
+
+            <div class="form-group">
+                <label>LinkedIn</label>
+                <input type="url" id="linkedin" placeholder="linkedin.com/in/johndoe">
+            </div>
+
+            <div class="form-group">
+                <label>Professional Summary</label>
+                <textarea id="summary" placeholder="A brief professional summary..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Skills (comma-separated)</label>
+                <textarea id="skills" placeholder="JavaScript, Python, React, Node.js"></textarea>
+            </div>
+
+            <div id="experienceSection">
+                <h3>Work Experience</h3>
+                <div class="dynamic-section" data-section="experience">
+                    <div class="form-group">
+                        <label>Job Title</label>
+                        <input type="text" class="job-title" placeholder="Senior Software Engineer">
+                    </div>
+                    <div class="form-group">
+                        <label>Company</label>
+                        <input type="text" class="company" placeholder="Tech Corp">
+                    </div>
+                    <div class="form-group">
+                        <label>Duration</label>
+                        <input type="text" class="duration" placeholder="Jan 2020 - Present">
+                    </div>
+                    <div class="form-group">
+                        <label>Key Achievements (one per line)</label>
+                        <textarea class="achievements" placeholder="Led a team of 5 developers&#10;Increased system performance by 40%&#10;Implemented microservices architecture"></textarea>
+                    </div>
+                    <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+                </div>
+                <button type="button" class="btn add-btn" onclick="addExperience()">Add Experience</button>
+            </div>
+
+            <div id="educationSection">
+                <h3>Education</h3>
+                <div class="dynamic-section" data-section="education">
+                    <div class="form-group">
+                        <label>Degree</label>
+                        <input type="text" class="degree" placeholder="Bachelor of Science in Computer Science">
+                    </div>
+                    <div class="form-group">
+                        <label>Institution</label>
+                        <input type="text" class="institution" placeholder="University of Technology">
+                    </div>
+                    <div class="form-group">
+                        <label>Year</label>
+                        <input type="text" class="year" placeholder="2016-2020">
+                    </div>
+                    <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+                </div>
+                <button type="button" class="btn add-btn" onclick="addEducation()">Add Education</button>
+            </div>
+
+            <div id="projectsSection">
+                <h3>Projects</h3>
+                <div class="dynamic-section" data-section="project">
+                    <div class="form-group">
+                        <label>Project Name</label>
+                        <input type="text" class="project-name" placeholder="E-commerce Platform">
+                    </div>
+                    <div class="form-group">
+                        <label>Technologies</label>
+                        <input type="text" class="technologies" placeholder="React, Node.js, MongoDB">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="project-description" placeholder="Built a full-stack e-commerce platform with real-time inventory management"></textarea>
+                    </div>
+                    <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+                </div>
+                <button type="button" class="btn add-btn" onclick="addProject()">Add Project</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="button" class="btn" onclick="generateResume()">Generate Resume</button>
+                <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear All</button>
+            </div>
+        </div>
+
+        <div class="resume-section">
+            <div id="resumeOutput" class="resume">
+                <div style="text-align: center; color: #666; padding: 50px;">
+                    <h2>Your resume will appear here</h2>
+                    <p>Fill out the form and click "Generate Resume"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DSA Implementation: Hash Map for skill categorization and optimization
+        class SkillHashMap {
+            constructor() {
+                this.skillCategories = new Map();
+                this.initializeCategories();
+            }
+
+            initializeCategories() {
+                this.skillCategories.set('frontend', ['JavaScript', 'React', 'Vue', 'Angular', 'HTML', 'CSS', 'TypeScript']);
+                this.skillCategories.set('backend', ['Node.js', 'Python', 'Java', 'PHP', 'Ruby', 'Go', 'C#']);
+                this.skillCategories.set('database', ['MongoDB', 'MySQL', 'PostgreSQL', 'Redis', 'SQLite']);
+                this.skillCategories.set('cloud', ['AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes']);
+                this.skillCategories.set('tools', ['Git', 'Jenkins', 'Webpack', 'Babel', 'Jest']);
+            }
+
+            categorizeSkills(skills) {
+                const categorized = new Map();
+                skills.forEach(skill => {
+                    let found = false;
+                    for (let [category, categorySkills] of this.skillCategories) {
+                        if (categorySkills.some(s => s.toLowerCase() === skill.toLowerCase())) {
+                            if (!categorized.has(category)) {
+                                categorized.set(category, []);
+                            }
+                            categorized.get(category).push(skill);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        if (!categorized.has('other')) {
+                            categorized.set('other', []);
+                        }
+                        categorized.get('other').push(skill);
+                    }
+                });
+                return categorized;
+            }
+        }
+
+        // DSA Implementation: Priority Queue for experience sorting
+        class PriorityQueue {
+            constructor() {
+                this.items = [];
+            }
+
+            enqueue(element, priority) {
+                const queueElement = { element, priority };
+                let added = false;
+                
+                for (let i = 0; i < this.items.length; i++) {
+                    if (queueElement.priority > this.items[i].priority) {
+                        this.items.splice(i, 0, queueElement);
+                        added = true;
+                        break;
+                    }
+                }
+                
+                if (!added) {
+                    this.items.push(queueElement);
+                }
+            }
+
+            dequeue() {
+                return this.items.shift();
+            }
+
+            isEmpty() {
+                return this.items.length === 0;
+            }
+        }
+
+        // DSA Implementation: Trie for keyword matching and optimization
+        class TrieNode {
+            constructor() {
+                this.children = new Map();
+                this.isEndOfWord = false;
+                this.score = 0;
+            }
+        }
+
+        class Trie {
+            constructor() {
+                this.root = new TrieNode();
+                this.initializeKeywords();
+            }
+
+            initializeKeywords() {
+                const keywords = [
+                    { word: 'led', score: 10 },
+                    { word: 'managed', score: 9 },
+                    { word: 'developed', score: 8 },
+                    { word: 'implemented', score: 8 },
+                    { word: 'optimized', score: 9 },
+                    { word: 'increased', score: 10 },
+                    { word: 'reduced', score: 9 },
+                    { word: 'improved', score: 8 },
+                    { word: 'achieved', score: 9 },
+                    { word: 'delivered', score: 7 }
+                ];
+
+                keywords.forEach(({ word, score }) => {
+                    this.insert(word, score);
+                });
+            }
+
+            insert(word, score) {
+                let current = this.root;
+                for (let char of word.toLowerCase()) {
+                    if (!current.children.has(char)) {
+                        current.children.set(char, new TrieNode());
+                    }
+                    current = current.children.get(char);
+                }
+                current.isEndOfWord = true;
+                current.score = score;
+            }
+
+            search(word) {
+                let current = this.root;
+                for (let char of word.toLowerCase()) {
+                    if (!current.children.has(char)) {
+                        return null;
+                    }
+                    current = current.children.get(char);
+                }
+                return current.isEndOfWord ? current.score : null;
+            }
+
+            calculateTextScore(text) {
+                const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+                let totalScore = 0;
+                words.forEach(word => {
+                    const score = this.search(word);
+                    if (score) totalScore += score;
+                });
+                return totalScore;
+            }
+        }
+
+        // DSA Implementation: Graph for skill relationships
+        class SkillGraph {
+            constructor() {
+                this.adjacencyList = new Map();
+                this.buildSkillGraph();
+            }
+
+            buildSkillGraph() {
+                // Build relationships between related skills
+                this.addEdge('JavaScript', 'React');
+                this.addEdge('JavaScript', 'Node.js');
+                this.addEdge('React', 'Redux');
+                this.addEdge('Python', 'Django');
+                this.addEdge('Python', 'Flask');
+                this.addEdge('Java', 'Spring');
+                this.addEdge('AWS', 'Docker');
+                this.addEdge('Docker', 'Kubernetes');
+            }
+
+            addEdge(skill1, skill2) {
+                if (!this.adjacencyList.has(skill1)) {
+                    this.adjacencyList.set(skill1, []);
+                }
+                if (!this.adjacencyList.has(skill2)) {
+                    this.adjacencyList.set(skill2, []);
+                }
+                this.adjacencyList.get(skill1).push(skill2);
+                this.adjacencyList.get(skill2).push(skill1);
+            }
+
+            getRelatedSkills(skill) {
+                return this.adjacencyList.get(skill) || [];
+            }
+
+            calculateSkillSynergy(skills) {
+                let synergyScore = 0;
+                skills.forEach(skill => {
+                    const related = this.getRelatedSkills(skill);
+                    const matches = related.filter(r => skills.includes(r));
+                    synergyScore += matches.length;
+                });
+                return synergyScore;
+            }
+        }
+
+        // Initialize DSA structures
+        const skillHashMap = new SkillHashMap();
+        const trie = new Trie();
+        const skillGraph = new SkillGraph();
+
+        function addExperience() {
+            const section = document.getElementById('experienceSection');
+            const newExperience = document.createElement('div');
+            newExperience.className = 'dynamic-section';
+            newExperience.setAttribute('data-section', 'experience');
+            newExperience.innerHTML = `
+                <div class="form-group">
+                    <label>Job Title</label>
+                    <input type="text" class="job-title" placeholder="Senior Software Engineer">
+                </div>
+                <div class="form-group">
+                    <label>Company</label>
+                    <input type="text" class="company" placeholder="Tech Corp">
+                </div>
+                <div class="form-group">
+                    <label>Duration</label>
+                    <input type="text" class="duration" placeholder="Jan 2020 - Present">
+                </div>
+                <div class="form-group">
+                    <label>Key Achievements (one per line)</label>
+                    <textarea class="achievements" placeholder="Led a team of 5 developers
+Increased system performance by 40%
+Implemented microservices architecture"></textarea>
+                </div>
+                <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+            `;
+            section.insertBefore(newExperience, section.querySelector('.add-btn'));
+        }
+
+        function addEducation() {
+            const section = document.getElementById('educationSection');
+            const newEducation = document.createElement('div');
+            newEducation.className = 'dynamic-section';
+            newEducation.setAttribute('data-section', 'education');
+            newEducation.innerHTML = `
+                <div class="form-group">
+                    <label>Degree</label>
+                    <input type="text" class="degree" placeholder="Bachelor of Science in Computer Science">
+                </div>
+                <div class="form-group">
+                    <label>Institution</label>
+                    <input type="text" class="institution" placeholder="University of Technology">
+                </div>
+                <div class="form-group">
+                    <label>Year</label>
+                    <input type="text" class="year" placeholder="2016-2020">
+                </div>
+                <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+            `;
+            section.insertBefore(newEducation, section.querySelector('.add-btn'));
+        }
+
+        function addProject() {
+            const section = document.getElementById('projectsSection');
+            const newProject = document.createElement('div');
+            newProject.className = 'dynamic-section';
+            newProject.setAttribute('data-section', 'project');
+            newProject.innerHTML = `
+                <div class="form-group">
+                    <label>Project Name</label>
+                    <input type="text" class="project-name" placeholder="E-commerce Platform">
+                </div>
+                <div class="form-group">
+                    <label>Technologies</label>
+                    <input type="text" class="technologies" placeholder="React, Node.js, MongoDB">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea class="project-description" placeholder="Built a full-stack e-commerce platform with real-time inventory management"></textarea>
+                </div>
+                <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+            `;
+            section.insertBefore(newProject, section.querySelector('.add-btn'));
+        }
+
+        function removeSection(button) {
+            button.parentElement.remove();
+        }
+
+        function clearForm() {
+            document.querySelectorAll('input, textarea').forEach(input => {
+                input.value = '';
+            });
+            
+            // Keep only one section for each type
+            ['experience', 'education', 'project'].forEach(type => {
+                const sections = document.querySelectorAll(`[data-section="${type}"]`);
+                for (let i = 1; i < sections.length; i++) {
+                    sections[i].remove();
+                }
+            });
+            
+            document.getElementById('resumeOutput').innerHTML = `
+                <div style="text-align: center; color: #666; padding: 50px;">
+                    <h2>Your resume will appear here</h2>
+                    <p>Fill out the form and click "Generate Resume"</p>
+                </div>
+            `;
+        }
+
+        function optimizeContent(text) {
+            if (!text) return text;
+            
+            const improvements = new Map([
+                ['worked on', 'developed'],
+                ['helped with', 'collaborated on'],
+                ['was responsible for', 'managed'],
+                ['did', 'executed'],
+                ['made', 'created'],
+                ['used', 'utilized'],
+                ['good at', 'proficient in'],
+                ['know', 'experienced with']
+            ]);
+
+            let optimized = text;
+            for (let [weak, strong] of improvements) {
+                const regex = new RegExp(weak, 'gi');
+                optimized = optimized.replace(regex, strong);
+            }
+
+            return optimized;
+        }
+
+        function generateResume() {
+            // Collect form data
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                title: document.getElementById('title').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                location: document.getElementById('location').value,
+                linkedin: document.getElementById('linkedin').value,
+                summary: optimizeContent(document.getElementById('summary').value),
+                skills: document.getElementById('skills').value.split(',').map(s => s.trim()).filter(s => s)
+            };
+
+            // Collect experiences using Priority Queue (sorted by recency/importance)
+            const experiences = [];
+            document.querySelectorAll('[data-section="experience"]').forEach((section, index) => {
+                const exp = {
+                    title: section.querySelector('.job-title').value,
+                    company: section.querySelector('.company').value,
+                    duration: section.querySelector('.duration').value,
+                    achievements: section.querySelector('.achievements').value
+                        .split('\n')
+                        .map(a => optimizeContent(a.trim()))
+                        .filter(a => a)
+                };
+                if (exp.title || exp.company) {
+                    experiences.push(exp);
+                }
+            });
+
+            // Collect education
+            const education = [];
+            document.querySelectorAll('[data-section="education"]').forEach(section => {
+                const edu = {
+                    degree: section.querySelector('.degree').value,
+                    institution: section.querySelector('.institution').value,
+                    year: section.querySelector('.year').value
+                };
+                if (edu.degree || edu.institution) {
+                    education.push(edu);
+                }
+            });
+
+            // Collect projects
+            const projects = [];
+            document.querySelectorAll('[data-section="project"]').forEach(section => {
+                const proj = {
+                    name: section.querySelector('.project-name').value,
+                    technologies: section.querySelector('.technologies').value,
+                    description: optimizeContent(section.querySelector('.project-description').value)
+                };
+                if (proj.name || proj.description) {
+                    projects.push(proj);
+                }
+            });
+
+            // Generate Resume HTML using DSA optimizations
+            let resumeHTML = `
+                <div class="resume-header">
+                    <div class="resume-name">${formData.fullName}</div>
+                    <div class="resume-title">${formData.title}</div>
+                    <div class="contact-info">
+                        ${formData.email ? `<span>📧 ${formData.email}</span>` : ''}
+                        ${formData.phone ? `<span>📱 ${formData.phone}</span>` : ''}
+                        ${formData.location ? `<span>📍 ${formData.location}</span>` : ''}
+                        ${formData.linkedin ? `<span>🔗 ${formData.linkedin}</span>` : ''}
+                    </div>
+                </div>
+            `;
+
+            if (formData.summary) {
+                resumeHTML += `
+                    <div class="resume-section-title">Professional Summary</div>
+                    <div class="summary-text">${formData.summary}</div>
+                `;
+            }
+
+            // Skills section with categorization using HashMap
+            if (formData.skills.length > 0) {
+                const categorizedSkills = skillHashMap.categorizeSkills(formData.skills);
+                const synergyScore = skillGraph.calculateSkillSynergy(formData.skills);
+                
+                resumeHTML += `<div class="resume-section-title">Technical Skills</div>`;
+                resumeHTML += `<div class="skills-container">`;
+                
+                // Sort skills by category priority
+                const categoryOrder = ['frontend', 'backend', 'database', 'cloud', 'tools', 'other'];
+                categoryOrder.forEach(category => {
+                    if (categorizedSkills.has(category)) {
+                        categorizedSkills.get(category).forEach(skill => {
+                            resumeHTML += `<span class="skill-tag">${skill}</span>`;
+                        });
+                    }
+                });
+                
+                resumeHTML += `</div>`;
+            }
+
+            // Experience section with Trie-based optimization scoring
+            if (experiences.length > 0) {
+                resumeHTML += `<div class="resume-section-title">Work Experience</div>`;
+                experiences.forEach(exp => {
+                    const experienceScore = trie.calculateTextScore(exp.achievements.join(' '));
+                    resumeHTML += `
+                        <div class="experience-item">
+                            <div class="item-header">
+                                <span>${exp.title}</span> at <span class="item-company">${exp.company}</span>
+                            </div>
+                            <div class="item-date">${exp.duration}</div>
+                            ${exp.achievements.map(achievement => 
+                                `<div class="achievement-bullet">${achievement}</div>`
+                            ).join('')}
+                        </div>
+                    `;
+                });
+            }
+
+            // Education section
+            if (education.length > 0) {
+                resumeHTML += `<div class="resume-section-title">Education</div>`;
+                education.forEach(edu => {
+                    resumeHTML += `
+                        <div class="education-item">
+                            <div class="item-header">${edu.degree}</div>
+                            <div class="item-company">${edu.institution}</div>
+                            <div class="item-date">${edu.year}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Projects section
+            if (projects.length > 0) {
+                resumeHTML += `<div class="resume-section-title">Key Projects</div>`;
+                projects.forEach(proj => {
+                    resumeHTML += `
+                        <div class="project-item">
+                            <div class="item-header">${proj.name}</div>
+                            <div class="item-date">Technologies: ${proj.technologies}</div>
+                            <div>${proj.description}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('resumeOutput').innerHTML = resumeHTML;
+
+            // Show optimization indicator
+            const indicator = document.getElementById('optimizationIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize with sample data for demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            // You can add sample data here for testing
+        });
+    </script>
+</body>
+</html>-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Professional Resume Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+          /* Career Advisor Theme Variables */
+          --login-primary-color: #052a61; /* Main accent */
+          --login-primary-dark-color: #0A58CA; /* Hover accent */
+          --login-background-gradient-start: #141E30;
+          --login-background-gradient-end: #243B55;
+
+          --text-color-dark: #34495E; 
+          --text-color-light: #5D6D7E; 
+          --text-on-dark-bg: #E2E8F0; 
+
+          --input-border-color: #DDE2E7;
+          --input-focus-border-color: var(--login-primary-color);
+          --input-focus-shadow-color: rgba(5, 42, 97, 0.25);
+          --input-bg-color: #F9FAFB;
+          --input-text-color: var(--text-color-dark);
+          --input-placeholder-color: #9CA3AF;
+
+          --button-text-color: #FFFFFF;
+          --container-bg-color: #FFFFFF;
+
+          --error-color: #dc1e09;
+          --error-dark-color: #b01707;
+          --success-color: #047733;
+          --success-dark-color: #035d27;
+          /* --download-color: #FF8C00; Removed */
+          /* --download-dark-color: #cc7000; Removed */
+
+
+          --link-color: var(--login-primary-color);
+          --link-hover-color: var(--login-primary-dark-color);
+          
+          --animated-icon-color: rgba(255, 255, 255, 0.4); 
+
+          --base-padding: 15px;
+          --base-margin: 10px;
+          --border-radius-md: 8px;
+          --border-radius-lg: 12px;
+          --border-radius-pill: 25px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background: linear-gradient(100deg, var(--login-background-gradient-start), var(--login-background-gradient-end));
+            color: var(--text-color-dark); 
+            min-height: 100vh;
+            padding: 20px;
+            position: relative; 
+            overflow-x: hidden; 
+        }
+
+        /* Animated Background Styling */
+        .animated-bg {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 0;
+          overflow: hidden;
+          pointer-events: none;
+        }
+        .animated-bg span.icon-float {
+            position: absolute;
+            bottom: -30px;
+            color: var(--animated-icon-color);
+            font-size: 20px;
+            opacity: 0;
+            animation: floatUpCareer 15s linear infinite;
+            user-select: none;
+        }
+        .icon-float.icon-lightbulb::before { content: "💡"; } .icon-float.icon-gear::before { content: "⚙️"; } .icon-float.icon-briefcase::before { content: "💼"; } .icon-float.icon-arrow::before { content: "📈"; } .icon-float.icon-cap::before { content: "🎓"; } .icon-float.icon-speech::before { content: "💬"; } .icon-float.icon-star::before { content: "⭐"; } .icon-float.icon-network::before { content: "🌐"; } .icon-float.icon-puzzle::before { content: "🧩"; } .icon-float.icon-target::before { content: "🎯"; } .icon-float.icon-pencil::before { content: "✏️"; } .icon-float.icon-rocket::before { content: "🚀"; }
+        @keyframes floatUpCareer {
+          0% { transform: translateY(0vh) translateX(0vw); opacity: 0; }
+          10%, 90% { opacity: 0.8; }
+          100% { transform: translateY(-110vh) translateX(calc(var(--drift-x, 0) * 2vw)); opacity: 0; }
+        }
+        .animated-bg span:nth-child(1) { left: 8%; animation-delay: 0s; font-size: 38px; --drift-x: -1.2; color: rgba(255,255,255,0.44);} .animated-bg span:nth-child(2) { left: 18%; animation-delay: 2.5s; font-size: 30px; --drift-x: 1; animation-duration: 18s; } .animated-bg span:nth-child(3) { left: 28%; animation-delay: 4s; font-size: 42px; --drift-x: -1.5; color: rgba(255,255,255,0.50);} .animated-bg span:nth-child(4) { left: 38%; animation-delay: 1s; font-size: 32px; --drift-x: 0.5; animation-duration: 13s; } .animated-bg span:nth-child(5) { left: 48%; animation-delay: 5s; font-size: 40px; --drift-x: -0.8; animation-duration: 20s; color: rgba(255,255,255,0.35);} .animated-bg span:nth-child(6) { left: 58%; animation-delay: 3s; font-size: 30px; --drift-x: 1.2; animation-duration: 16s; } .animated-bg span:nth-child(7) { left: 68%; animation-delay: 0.8s; font-size: 45px; --drift-x: -0.8; color: rgba(255,255,255,0.55);} .animated-bg span:nth-child(8) { left: 78%; animation-delay: 4.5s; font-size: 28px; --drift-x: 0.8; animation-duration: 14s; } .animated-bg span:nth-child(9) { left: 88%; animation-delay: 1.5s; font-size: 36px; --drift-x: -1.2; animation-duration: 19s; color: rgba(255,255,255,0.48);} .animated-bg span:nth-child(10) { left: 3%; animation-delay: 3.5s; font-size: 35px; --drift-x: 1.1; animation-duration: 17s; } .animated-bg span:nth-child(11) { left: 13%; animation-delay: 6s; font-size: 28px; --drift-x: -0.7; color: rgba(255,255,255,0.42);} .animated-bg span:nth-child(12) { left: 83%; animation-delay: 2s; font-size: 38px; --drift-x: 0.7; animation-duration: 15s; }
+
+
+        /* Main Container Animation */
+        .container {
+            max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; position: relative; z-index: 1;
+            animation: fadeInContainer 0.5s 0.1s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes fadeInContainer {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form and Resume Section Entrance Animations */
+        .form-section, .resume-section {
+            background: var(--container-bg-color); border-radius: var(--border-radius-lg); padding: 30px; box-shadow: 0 12px 35px rgba(0,0,0,0.12), 0 3px 8px rgba(0,0,0,0.08); height: fit-content;
+            opacity: 0;
+            transform: translateY(25px) scale(0.98);
+        }
+        .form-section {
+            animation: slideUpAndFadeInBox 0.7s 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .resume-section {
+            min-height: 800px;
+            animation: slideUpAndFadeInBox 0.7s 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes slideUpAndFadeInBox {
+            from { opacity: 0; transform: translateY(25px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Section Header Animation */
+        .section-header { 
+            background: var(--login-primary-color); color: var(--button-text-color); padding: 15px 20px; margin: -30px -30px 25px -30px; border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0; font-size: 1.6em; font-weight: 600; text-align: center;
+            opacity: 0;
+            transform: translateY(-30px) scale(0.95);
+            animation: headerAppear 0.6s 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+        }
+        @keyframes headerAppear {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+
+        /* Staggered Form Element Animations */
+        .form-section > .form-group,
+        .form-section > #experienceSection,
+        .form-section > #educationSection,
+        .form-section > #projectsSection,
+        .form-section > div[style*="text-align: center"] { 
+            opacity: 0;
+            animation: fadeInElement 0.5s ease-out forwards;
+        }
+        .form-section > .form-group:nth-of-type(1) { animation-delay: 1.1s; } 
+        .form-section > .form-group:nth-of-type(2) { animation-delay: 1.15s; }
+        .form-section > .form-group:nth-of-type(3) { animation-delay: 1.2s; }
+        .form-section > .form-group:nth-of-type(4) { animation-delay: 1.25s; }
+        .form-section > .form-group:nth-of-type(5) { animation-delay: 1.3s; }
+        .form-section > .form-group:nth-of-type(6) { animation-delay: 1.35s; }
+        .form-section > .form-group:nth-of-type(7) { animation-delay: 1.4s; }
+        .form-section > .form-group:nth-of-type(8) { animation-delay: 1.45s; }
+
+        .form-section > #experienceSection { animation-delay: 1.5s; }
+        .form-section > #educationSection { animation-delay: 1.55s; }
+        .form-section > #projectsSection { animation-delay: 1.6s; }
+        
+        .form-section > div[style*="text-align: center"] { animation-delay: 1.65s; }
+
+
+        @keyframes fadeInElement {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Resume Content Animation (triggered by JS) */
+        @keyframes fadeInResumeElement {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+
+        .form-group { margin-bottom: var(--base-margin); }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-color-dark); font-size: 0.95em; }
+        input, textarea, select {
+            width: 100%; padding: 12px var(--base-padding); border: 1px solid var(--input-border-color); border-radius: var(--border-radius-md); font-size: 1em; font-family: 'Poppins', sans-serif; color: var(--input-text-color); background-color: var(--input-bg-color);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+        }
+        input::placeholder, textarea::placeholder { color: var(--input-placeholder-color); }
+        input:focus, textarea:focus, select:focus {
+            outline: none; border-color: var(--input-focus-border-color); background-color: var(--container-bg-color); box-shadow: 0 0 0 3.5px var(--input-focus-shadow-color);
+        }
+        textarea { resize: vertical; min-height: 100px; }
+
+        /* Button Base, Gradients, and Animations */
+        .btn {
+            color: var(--button-text-color); border: none; padding: 12px 24px; border-radius: var(--border-radius-pill); cursor: pointer; font-size: 1em; font-weight: 600; 
+            transition: background 0.3s ease-in-out, transform 0.15s ease-out, box-shadow 0.2s ease-in-out;
+            margin: 10px 5px; letter-spacing: 0.5px;
+            background: linear-gradient(135deg, var(--login-primary-dark-color), var(--login-primary-color));
+        }
+        .btn:hover {
+            background: linear-gradient(135deg, var(--login-primary-color), var(--login-primary-dark-color));
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(5, 42, 97, 0.3);
+        }
+        .btn:active {
+            transform: translateY(-1px) scale(0.98);
+            box-shadow: 0 3px 10px rgba(5, 42, 97, 0.25);
+        }
+        .btn:disabled {
+            background: linear-gradient(135deg, #b0bec5, #90a4ae); /* Muted gray gradient */
+            color: #607d8b;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #5a6268, #6c757d);
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #495057, #5a6268);
+            box-shadow: 0 6px 18px rgba(108, 117, 125, 0.2);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, var(--success-dark-color), var(--success-color));
+            font-size: 0.9em; padding: 8px 16px;
+        }
+        .add-btn:hover {
+            background: linear-gradient(135deg, #02401b, var(--success-dark-color));
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, var(--error-dark-color), var(--error-color));
+            font-size: 0.85em; padding: 6px 12px; margin-left: 10px;
+        }
+        .remove-btn:hover {
+            background: linear-gradient(135deg, #8c1205, var(--error-dark-color));
+        }
+
+        /* .btn-download removed */
+
+        /* Main Action Buttons (Generate/Clear/Download) Animation */
+        .form-section > div[style*="text-align: center"] .btn { 
+            opacity: 0;
+            transform: scale(0.8);
+            animation: popInButton 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .form-section > div[style*="text-align: center"] .btn:nth-child(1) { /* Generate Resume */
+            animation-delay: 1.7s; 
+        }
+        .form-section > div[style*="text-align: center"] .btn:nth-child(2) { /* Clear All */
+            animation-delay: 1.75s;
+        }
+        /* .form-section > div[style*="text-align: center"] .btn:nth-child(3) removed */
+
+        @keyframes popInButton {
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Animation for initial Add/Remove buttons */
+        #experienceSection .dynamic-section:first-of-type .remove-btn,
+        #experienceSection .add-btn,
+        #educationSection .dynamic-section:first-of-type .remove-btn,
+        #educationSection .add-btn,
+        #projectsSection .dynamic-section:first-of-type .remove-btn,
+        #projectsSection .add-btn {
+            opacity: 0;
+            transform: scale(0.9);
+            animation: popInSmallButton 0.3s ease-out forwards;
+        }
+
+        #experienceSection .dynamic-section:first-of-type .remove-btn { animation-delay: 1.55s; } 
+        #experienceSection .add-btn { animation-delay: 1.6s; }
+        
+        #educationSection .dynamic-section:first-of-type .remove-btn { animation-delay: 1.6s; } 
+        #educationSection .add-btn { animation-delay: 1.65s; }
+        
+        #projectsSection .dynamic-section:first-of-type .remove-btn { animation-delay: 1.65s; } 
+        #projectsSection .add-btn { animation-delay: 1.7s; }
+
+        @keyframes popInSmallButton {
+            to { opacity: 1; transform: scale(1); }
+        }
+
+
+        .dynamic-section {
+            border: 1px dashed var(--input-border-color); padding: 20px; margin: 15px 0; border-radius: var(--border-radius-md); position: relative; background-color: #fdfdff; 
+        }
+        
+        .form-section h3 { 
+            color: var(--login-primary-color); font-weight: 600; margin-top: 25px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid var(--input-border-color);
+        }
+
+        .resume { font-family: 'Poppins', 'Georgia', serif; line-height: 1.5; color: var(--text-color-dark); }
+        #resumeOutput {
+            padding: 20px; 
+            background-color: var(--container-bg-color); 
+        }
+        .resume-header { text-align: center; padding-bottom: 20px; border-bottom: 2px solid var(--login-primary-color); margin-bottom: 25px; }
+        .resume-name { font-size: 2em; color: var(--login-primary-color); margin-bottom: 5px; font-weight: 700; }
+        .resume-title { font-size: 1.1em; color: var(--text-color-light); margin-bottom: 15px; font-style: normal; font-weight: 500; }
+        .contact-info { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px 25px; font-size: 0.9em; color: var(--text-color-light); }
+        .contact-info span { display: inline-flex; align-items: center; }
+        .contact-info span a { color: var(--text-color-light); text-decoration: none; transition: color 0.2s ease; }
+        .contact-info span a:hover { color: var(--login-primary-color); text-decoration: underline; }
+        .resume-section-title { font-size: 1.3em; color: var(--login-primary-color); border-bottom: 1.5px solid var(--login-primary-color); padding-bottom: 5px; margin: 25px 0 15px 0; font-weight: 600; }
+        .experience-item, .education-item, .project-item { margin-bottom: 20px; padding-left: 15px; border-left: 2.5px solid var(--input-border-color); }
+        .experience-item:hover, .education-item:hover, .project-item:hover { border-left-color: var(--login-primary-color); }
+        .item-header { font-weight: 600; color: var(--text-color-dark); margin-bottom: 3px; font-size: 1.05em; }
+        .item-company { color: var(--login-primary-dark-color); font-weight: 500; }
+        .item-date { color: var(--text-color-light); font-size: 0.85em; margin-bottom: 8px; }
+        .skills-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .skill-tag { background: var(--login-primary-color); color: var(--button-text-color); padding: 5px 12px; border-radius: var(--border-radius-pill); font-size: 0.85em; font-weight: 500; }
+        .skill-tag:hover { background: var(--login-primary-dark-color); }
+        .summary-text { font-style: normal; color: var(--text-color-dark); background: #f8f9fb; padding: var(--base-padding); border-radius: var(--border-radius-md); border-left: 3px solid var(--login-primary-color); line-height: 1.6; }
+        .hidden { display: none; }
+        .optimization-indicator {
+            position: fixed; top: 20px; right: 20px; background: var(--success-color); color: white; padding: 10px 15px; border-radius: var(--border-radius-md); font-size: 0.9em;
+            transform: translateX(300px); transition: transform 0.3s ease-in-out; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .optimization-indicator.show { transform: translateX(0); }
+        @media (max-width: 1200px) { .container { grid-template-columns: 1fr; } .resume-section { margin-top: 30px; } }
+        @media (max-width: 768px) { 
+            .form-section > div[style*="text-align: center"] {
+                display: flex;
+                flex-direction: column;
+            }
+            .form-section > div[style*="text-align: center"] .btn {
+                width: 100%;
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
+        .achievement-bullet { position: relative; padding-left: 20px; margin-bottom: 8px; font-size: 0.95em; line-height: 1.5; }
+        .achievement-bullet::before { content: "▸"; position: absolute; left: 0; color: var(--login-primary-color); font-weight: bold; font-size: 1.2em; line-height: 1; top: 2px; }
+
+         .back-button {
+   background: linear-gradient(to right, #8b6f20, #c49e2c);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            display: inline;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            margin-top: 30px;
+            margin-left: 25px;
+          
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(4, 2, 116, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Elements -->
+    <div class="animated-bg">
+        <span class="icon-float icon-lightbulb"></span> <span class="icon-float icon-gear"></span> <span class="icon-float icon-briefcase"></span> <span class="icon-float icon-arrow"></span> <span class="icon-float icon-cap"></span> <span class="icon-float icon-speech"></span> <span class="icon-float icon-star"></span> <span class="icon-float icon-network"></span> <span class="icon-float icon-puzzle"></span> <span class="icon-float icon-target"></span> <span class="icon-float icon-pencil"></span> <span class="icon-float icon-rocket"></span>
+    </div>
+
+    <div class="optimization-indicator" id="optimizationIndicator">
+        Resume Optimized! 🚀
+    </div>
+
+    <div class="container">
+        <div class="form-section">
+            <div class="section-header">Resume Builder</div>
+            
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label for="title">Professional Title</label>
+                <input type="text" id="title" placeholder="Software Engineer">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="john@example.com">
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" placeholder="+1 (555) 123-4567">
+            </div>
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" id="location" placeholder="San Francisco, CA">
+            </div>
+            <div class="form-group">
+                <label for="linkedin">LinkedIn</label>
+                <input type="url" id="linkedin" placeholder="linkedin.com/in/johndoe">
+            </div>
+            <div class="form-group">
+                <label for="summary">Professional Summary</label>
+                <textarea id="summary" placeholder="A brief professional summary..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="skills">Skills (comma-separated)</label>
+                <textarea id="skills" placeholder="JavaScript, Python, React, Node.js"></textarea>
+            </div>
+
+            <div id="experienceSection">
+                <h3>Work Experience</h3>
+                <div class="dynamic-section" data-section="experience">
+                    <div class="form-group">
+                        <label>Job Title</label>
+                        <input type="text" class="job-title" placeholder="Senior Software Engineer">
+                    </div>
+                    <div class="form-group">
+                        <label>Company</label>
+                        <input type="text" class="company" placeholder="Tech Corp">
+                    </div>
+                    <div class="form-group">
+                        <label>Duration</label>
+                        <input type="text" class="duration" placeholder="Jan 2020 - Present">
+                    </div>
+                    <div class="form-group">
+                        <label>Key Achievements (one per line)</label>
+                        <textarea class="achievements" placeholder="Led a team of 5 developers
+Increased system performance by 40%
+Implemented microservices architecture"></textarea>
+                    </div>
+                    <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+                </div>
+                <button type="button" class="btn add-btn" onclick="addExperience()">Add Experience</button>
+            </div>
+
+            <div id="educationSection">
+                <h3>Education</h3>
+                <div class="dynamic-section" data-section="education">
+                    <div class="form-group">
+                        <label>Degree</label>
+                        <input type="text" class="degree" placeholder="Bachelor of Science in Computer Science">
+                    </div>
+                    <div class="form-group">
+                        <label>Institution</label>
+                        <input type="text" class="institution" placeholder="University of Technology">
+                    </div>
+                    <div class="form-group">
+                        <label>Year</label>
+                        <input type="text" class="year" placeholder="2016-2020">
+                    </div>
+                    <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+                </div>
+                <button type="button" class="btn add-btn" onclick="addEducation()">Add Education</button>
+            </div>
+
+            <div id="projectsSection">
+                <h3>Projects</h3>
+                <div class="dynamic-section" data-section="project">
+                    <div class="form-group">
+                        <label>Project Name</label>
+                        <input type="text" class="project-name" placeholder="E-commerce Platform">
+                    </div>
+                    <div class="form-group">
+                        <label>Technologies</label>
+                        <input type="text" class="technologies" placeholder="React, Node.js, MongoDB">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="project-description" placeholder="Built a full-stack e-commerce platform with real-time inventory management"></textarea>
+                    </div>
+                    <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+                </div>
+                <button type="button" class="btn add-btn" onclick="addProject()">Add Project</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="button" class="btn" onclick="generateResume()">Generate Resume</button>
+                <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear All</button>
+                <!-- Download button removed -->
+                 <button type="button" class="btn" id="printBtn" onclick="printResume()" disabled>Print Resume</button>
+                 <button class="back-button" onclick="window.location.href='profile.html'">← Back to Profile</button>
+            </div>
+        </div>
+
+        <div class="resume-section">
+            <div id="resumeOutput" class="resume">
+                <div style="text-align: center; color: var(--text-color-light); padding: 50px;">
+                    <h2>Your resume will appear here</h2>
+                    <p>Fill out the form and click "Generate Resume"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SkillHashMap { /* ... (DSA code remains the same) ... */ 
+            constructor() { this.skillCategories = new Map(); this.initializeCategories(); }
+            initializeCategories() { this.skillCategories.set('frontend', ['JavaScript', 'React', 'Vue', 'Angular', 'HTML', 'CSS', 'TypeScript', 'jQuery', 'Sass', 'LESS', 'Bootstrap', 'Tailwind']); this.skillCategories.set('backend', ['Node.js', 'Python', 'Java', 'PHP', 'Ruby', 'Go', 'C#', '.NET', 'Express.js', 'Django', 'Flask', 'Spring Boot', 'Ruby on Rails']); this.skillCategories.set('database', ['MongoDB', 'MySQL', 'PostgreSQL', 'Redis', 'SQLite', 'Oracle', 'SQL Server', 'Firebase']); this.skillCategories.set('cloud', ['AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Terraform', 'Serverless', 'Heroku']); this.skillCategories.set('mobile', ['React Native', 'Flutter', 'Swift', 'Kotlin', 'Android', 'iOS']); this.skillCategories.set('tools', ['Git', 'GitHub', 'GitLab', 'Jenkins', 'Webpack', 'Babel', 'Jest', 'Mocha', 'CI/CD', 'Agile', 'Scrum']); this.skillCategories.set('datasciml', ['Python', 'R', 'TensorFlow', 'PyTorch', 'Scikit-learn', 'Pandas', 'NumPy', 'Machine Learning', 'Data Analysis']); }
+            categorizeSkills(skills) { const categorized = new Map(); skills.forEach(skillInput => { const skill = skillInput.trim(); if (!skill) return; let found = false; for (let [category, categorySkills] of this.skillCategories) { if (categorySkills.some(s => s.toLowerCase() === skill.toLowerCase())) { if (!categorized.has(category)) { categorized.set(category, new Set()); } categorized.get(category).add(skill); found = true; } } if (!found) { if (!categorized.has('other')) { categorized.set('other', new Set()); } categorized.get('other').add(skill); } }); const result = new Map(); for (let [category, skillSet] of categorized) { result.set(category, Array.from(skillSet)); } return result; }
+        }
+        class PriorityQueue { /* ... (DSA code remains the same) ... */ 
+            constructor() { this.items = []; } enqueue(element, priority) { const queueElement = { element, priority }; let added = false; for (let i = 0; i < this.items.length; i++) { if (queueElement.priority > this.items[i].priority) { this.items.splice(i, 0, queueElement); added = true; break; } } if (!added) { this.items.push(queueElement); } } dequeue() { return this.items.shift(); } isEmpty() { return this.items.length === 0; } }
+        class TrieNode { /* ... (DSA code remains the same) ... */ 
+            constructor() { this.children = new Map(); this.isEndOfWord = false; this.score = 0; } }
+        class Trie { /* ... (DSA code remains the same) ... */ 
+            constructor() { this.root = new TrieNode(); this.initializeKeywords(); } initializeKeywords() { const keywords = [ { word: 'led', score: 10 }, { word: 'spearheaded', score: 10 }, { word: 'managed', score: 9 }, { word: 'directed', score: 9 }, { word: 'developed', score: 8 }, { word: 'engineered', score: 8 }, { word: 'implemented', score: 8 }, { word: 'deployed', score: 8 }, { word: 'optimized', score: 9 }, { word: 'enhanced', score: 9 }, { word: 'increased', score: 10 }, { word: 'grew', score: 9 }, { word: 'reduced', score: 9 }, { word: 'decreased', score: 8 }, { word: 'improved', score: 8 }, { word: 'streamlined', score: 8 }, { word: 'achieved', score: 9 }, { word: 'attained', score: 8 }, { word: 'delivered', score: 7 }, { word: 'launched', score: 8 }, { word: 'created', score: 7 }, { word: 'designed', score: 7 }, { word: 'innovated', score: 9}, { word: 'pioneered', score: 9} ]; keywords.forEach(({ word, score }) => { this.insert(word, score); }); } insert(word, score) { let current = this.root; for (let char of word.toLowerCase()) { if (!current.children.has(char)) { current.children.set(char, new TrieNode()); } current = current.children.get(char); } current.isEndOfWord = true; current.score = score; } search(word) { let current = this.root; for (let char of word.toLowerCase()) { if (!current.children.has(char)) { return null; } current = current.children.get(char); } return current.isEndOfWord ? current.score : null; } calculateTextScore(text) { const words = text.toLowerCase().match(/\b\w+\b/g) || []; let totalScore = 0; words.forEach(word => { const score = this.search(word); if (score) totalScore += score; }); return totalScore; } }
+        class SkillGraph { /* ... (DSA code remains the same) ... */ 
+            constructor() { this.adjacencyList = new Map(); this.buildSkillGraph(); } buildSkillGraph() { this.addEdge('JavaScript', 'React'); this.addEdge('JavaScript', 'Angular'); this.addEdge('JavaScript', 'Vue'); this.addEdge('JavaScript', 'Node.js'); this.addEdge('JavaScript', 'TypeScript'); this.addEdge('React', 'Redux'); this.addEdge('React', 'Next.js'); this.addEdge('HTML', 'CSS'); this.addEdge('Python', 'Django'); this.addEdge('Python', 'Flask'); this.addEdge('Python', 'Pandas'); this.addEdge('Java', 'Spring'); this.addEdge('Java', 'Kotlin'); this.addEdge('AWS', 'Docker'); this.addEdge('AWS', 'Kubernetes'); this.addEdge('AWS', 'Lambda'); this.addEdge('Azure', 'Docker'); this.addEdge('Azure', 'Kubernetes'); this.addEdge('GCP', 'Docker'); this.addEdge('GCP', 'Kubernetes'); this.addEdge('Docker', 'Kubernetes'); this.addEdge('Git', 'GitHub'); this.addEdge('Machine Learning', 'Python'); this.addEdge('Machine Learning', 'TensorFlow'); this.addEdge('Machine Learning', 'PyTorch'); } addEdge(skill1, skill2) { if (!this.adjacencyList.has(skill1)) this.adjacencyList.set(skill1, []); if (!this.adjacencyList.has(skill2)) this.adjacencyList.set(skill2, []); this.adjacencyList.get(skill1).push(skill2); this.adjacencyList.get(skill2).push(skill1); } getRelatedSkills(skill) { return this.adjacencyList.get(skill) || []; } calculateSkillSynergy(skills) { let synergyScore = 0; const skillSet = new Set(skills.map(s => s.toLowerCase())); skills.forEach(skill => { const normalizedSkill = skill.toLowerCase(); const related = this.getRelatedSkills(skill); related.forEach(rSkill => { if (skillSet.has(rSkill.toLowerCase()) && normalizedSkill < rSkill.toLowerCase()) { synergyScore++; } }); }); return synergyScore; } }
+
+        const skillHashMap = new SkillHashMap();
+        const trie = new Trie();
+        const skillGraph = new SkillGraph();
+        // const downloadBtn = document.getElementById('downloadBtn'); // Removed
+
+
+        function animateNewDynamicSection(element) {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            void element.offsetWidth; 
+            element.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out';
+            setTimeout(() => {
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, 10); 
+        }
+
+        function addExperience() {
+            const section = document.getElementById('experienceSection');
+            const newExperience = document.createElement('div');
+            newExperience.className = 'dynamic-section';
+            newExperience.setAttribute('data-section', 'experience');
+            newExperience.innerHTML = `
+                <div class="form-group"> <label>Job Title</label> <input type="text" class="job-title" placeholder="Senior Software Engineer"> </div>
+                <div class="form-group"> <label>Company</label> <input type="text" class="company" placeholder="Tech Corp"> </div>
+                <div class="form-group"> <label>Duration</label> <input type="text" class="duration" placeholder="Jan 2020 - Present"> </div>
+                <div class="form-group"> <label>Key Achievements (one per line)</label> <textarea class="achievements" placeholder="Led a team of 5 developers
+Increased system performance by 40%
+Implemented microservices architecture"></textarea> </div>
+                <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+            `;
+            section.insertBefore(newExperience, section.querySelector('.add-btn'));
+            animateNewDynamicSection(newExperience);
+        }
+
+        function addEducation() {
+            const section = document.getElementById('educationSection');
+            const newEducation = document.createElement('div');
+            newEducation.className = 'dynamic-section';
+            newEducation.setAttribute('data-section', 'education');
+            newEducation.innerHTML = `
+                <div class="form-group"> <label>Degree</label> <input type="text" class="degree" placeholder="Bachelor of Science in Computer Science"> </div>
+                <div class="form-group"> <label>Institution</label> <input type="text" class="institution" placeholder="University of Technology"> </div>
+                <div class="form-group"> <label>Year</label> <input type="text" class="year" placeholder="2016-2020"> </div>
+                <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+            `;
+            section.insertBefore(newEducation, section.querySelector('.add-btn'));
+            animateNewDynamicSection(newEducation);
+        }
+
+        function addProject() {
+            const section = document.getElementById('projectsSection');
+            const newProject = document.createElement('div');
+            newProject.className = 'dynamic-section';
+            newProject.setAttribute('data-section', 'project');
+            newProject.innerHTML = `
+                <div class="form-group"> <label>Project Name</label> <input type="text" class="project-name" placeholder="E-commerce Platform"> </div>
+                <div class="form-group"> <label>Technologies</label> <input type="text" class="technologies" placeholder="React, Node.js, MongoDB"> </div>
+                <div class="form-group"> <label>Description</label> <textarea class="project-description" placeholder="Built a full-stack e-commerce platform with real-time inventory management"></textarea> </div>
+                <button type="button" class="btn remove-btn" onclick="removeSection(this)">Remove</button>
+            `;
+            section.insertBefore(newProject, section.querySelector('.add-btn'));
+            animateNewDynamicSection(newProject);
+        }
+
+        function removeSection(button) {
+            const sectionToRemove = button.parentElement;
+            sectionToRemove.style.transition = 'opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease, padding 0.3s ease, margin 0.3s ease';
+            sectionToRemove.style.opacity = '0';
+            sectionToRemove.style.transform = 'scaleY(0.8)';
+            sectionToRemove.style.maxHeight = '0px';
+            sectionToRemove.style.paddingTop = '0';
+            sectionToRemove.style.paddingBottom = '0';
+            sectionToRemove.style.marginTop = '0';
+            sectionToRemove.style.marginBottom = '0';
+            setTimeout(() => {
+                sectionToRemove.remove();
+            }, 300);
+        }
+
+        function clearForm() {
+            document.querySelectorAll('input, textarea').forEach(input => { input.value = ''; });
+            ['experience', 'education', 'project'].forEach(type => {
+                const sections = document.querySelectorAll(`[data-section="${type}"]`);
+                for (let i = 1; i < sections.length; i++) { sections[i].remove(); }
+                if (sections.length > 0) { sections[0].querySelectorAll('input, textarea').forEach(input => input.value = ''); }
+            });
+            document.getElementById('resumeOutput').innerHTML = `
+                <div style="text-align: center; color: var(--text-color-light); padding: 50px;">
+                    <h2>Your resume will appear here</h2> <p>Fill out the form and click "Generate Resume"</p>
+                </div>`;
+            // downloadBtn.disabled = true; // Removed
+        }
+
+        function optimizeContent(text) {
+            if (!text) return text;
+            const improvements = new Map([ [/worked on/gi, 'developed'], [/helped with/gi, 'collaborated on'], [/was responsible for/gi, 'managed'], [/responsible for/gi, 'oversaw'], [/did the/gi, 'executed the'], [/did/gi, 'performed'], [/made/gi, 'created'], [/used/gi, 'utilized'], [/good at/gi, 'proficient in'], [/know/gi, 'experienced with'], [/assisted in/gi, 'supported'], [/tasked with/gi, 'engineered'] ]);
+            let optimized = text;
+            for (let [weakRegex, strong] of improvements) { optimized = optimized.replace(weakRegex, strong); }
+            return optimized;
+        }
+
+        function generateResume() {
+            const formData = { fullName: document.getElementById('fullName').value.trim(), title: document.getElementById('title').value.trim(), email: document.getElementById('email').value.trim(), phone: document.getElementById('phone').value.trim(), location: document.getElementById('location').value.trim(), linkedin: document.getElementById('linkedin').value.trim(), summary: optimizeContent(document.getElementById('summary').value.trim()), skills: document.getElementById('skills').value.split(',').map(s => s.trim()).filter(s => s) };
+            const experiences = [], education = [], projects = [];
+            document.querySelectorAll('[data-section="experience"]').forEach(s => { const exp = { title: s.querySelector('.job-title').value.trim(), company: s.querySelector('.company').value.trim(), duration: s.querySelector('.duration').value.trim(), achievements: s.querySelector('.achievements').value.split('\n').map(a => optimizeContent(a.trim())).filter(a => a) }; if (exp.title || exp.company) experiences.push(exp); });
+            document.querySelectorAll('[data-section="education"]').forEach(s => { const edu = { degree: s.querySelector('.degree').value.trim(), institution: s.querySelector('.institution').value.trim(), year: s.querySelector('.year').value.trim() }; if (edu.degree || edu.institution) education.push(edu); });
+            document.querySelectorAll('[data-section="project"]').forEach(s => { const proj = { name: s.querySelector('.project-name').value.trim(), technologies: s.querySelector('.technologies').value.trim(), description: optimizeContent(s.querySelector('.project-description').value.trim()) }; if (proj.name || proj.description) projects.push(proj); });
+
+            let resumeHTML = `
+                <div class="resume-header"> <div class="resume-name">${formData.fullName || 'Your Name'}</div> <div class="resume-title">${formData.title || 'Professional Title'}</div> <div class="contact-info"> ${formData.email ? `<span>📧 ${formData.email}</span>` : ''} ${formData.phone ? `<span>📱 ${formData.phone}</span>` : ''} ${formData.location ? `<span>📍 ${formData.location}</span>` : ''} ${formData.linkedin ? `<span>🔗 <a href="${formData.linkedin.startsWith('http') ? formData.linkedin : 'https://' + formData.linkedin}" target="_blank" rel="noopener noreferrer">${formData.linkedin}</a></span>` : ''} </div> </div>`;
+            if (formData.summary) resumeHTML += `<div class="resume-section-title">Professional Summary</div><div class="summary-text">${formData.summary.replace(/\n/g, '<br>')}</div>`;
+            if (formData.skills.length > 0) { const categorizedSkills = skillHashMap.categorizeSkills(formData.skills); resumeHTML += `<div class="resume-section-title">Technical Skills</div><div class="skills-container">`; const categoryOrder = ['frontend', 'backend', 'mobile', 'database', 'cloud', 'datasciml', 'tools', 'other']; categoryOrder.forEach(category => { if (categorizedSkills.has(category) && categorizedSkills.get(category).length > 0) { categorizedSkills.get(category).forEach(skill => { resumeHTML += `<span class="skill-tag">${skill}</span>`; }); } }); resumeHTML += `</div>`; }
+            if (experiences.length > 0) { resumeHTML += `<div class="resume-section-title">Work Experience</div>`; experiences.forEach(exp => { resumeHTML += `<div class="experience-item"> <div class="item-header"> <span>${exp.title}</span>${exp.company ? ` at <span class="item-company">${exp.company}</span>` : ''} </div> ${exp.duration ? `<div class="item-date">${exp.duration}</div>` : ''} ${exp.achievements.map(a => `<div class="achievement-bullet">${a}</div>`).join('')} </div>`; }); }
+            if (education.length > 0) { resumeHTML += `<div class="resume-section-title">Education</div>`; education.forEach(edu => { resumeHTML += `<div class="education-item"> <div class="item-header">${edu.degree}</div> ${edu.institution ? `<div class="item-company">${edu.institution}</div>` : ''} ${edu.year ? `<div class="item-date">${edu.year}</div>` : ''} </div>`; }); }
+            if (projects.length > 0) { resumeHTML += `<div class="resume-section-title">Key Projects</div>`; projects.forEach(proj => { resumeHTML += `<div class="project-item"> <div class="item-header">${proj.name}</div> ${proj.technologies ? `<div class="item-date">Technologies: ${proj.technologies}</div>` : ''} ${proj.description ? `<div>${proj.description.replace(/\n/g, '<br>')}</div>` : ''} </div>`; }); }
+            
+            const resumeOutput = document.getElementById('resumeOutput');
+            resumeOutput.innerHTML = resumeHTML; 
+            document.getElementById('printBtn').disabled = false;
+            // downloadBtn.disabled = false; // Removed
+
+            const elementsToAnimate = resumeOutput.querySelectorAll( '.resume-header, .resume-section-title, .summary-text, .skills-container, .experience-item, .education-item, .project-item' );
+            elementsToAnimate.forEach((el, index) => {
+                el.style.opacity = '0'; 
+                el.style.transform = 'translateY(15px)'; 
+                el.style.animation = `fadeInResumeElement 0.4s ease-out ${index * 0.07}s forwards`;
+            });
+
+            const indicator = document.getElementById('optimizationIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => indicator.classList.remove('show'), 3000);
+        }
+
+        // downloadResume function removed
+ /*      function printResume() {
+    const resumeContent = document.getElementById('resumeOutput').innerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head><title>Resume</title></head>
+        <body>${resumeContent}</body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}*/
+function printResume() {
+    // Create a temporary div with print styles
+    const printDiv = document.createElement('div');
+    printDiv.innerHTML = `
+        <style>
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                #printable-resume, #printable-resume * {
+                    visibility: visible;
+                }
+                #printable-resume {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                }
+                    #resumeOutput * {
+                         max-width: 100%;
+    word-wrap: break-word;
+               overflow-wrap: break-word;
+           }
+
+#resumeOutput img {
+    max-width: 100%;
+    height: auto;
+}
+            }
+        </style>
+        <div id="printable-resume">
+            ${document.getElementById('resumeOutput').innerHTML}
+        </div>
+    `;
+    
+    document.body.appendChild(printDiv);
+    window.print();
+    document.body.removeChild(printDiv);
+}
+        document.addEventListener('DOMContentLoaded', function() {
+            clearForm(); 
+        });
+    </script>
+</body>
+</html>

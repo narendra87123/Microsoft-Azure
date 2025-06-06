@@ -1,0 +1,1512 @@
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Path Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .form-section {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus, 
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.2);
+        }
+
+        .skills-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .skill-item:hover {
+            background: #e9ecef;
+        }
+
+        .skill-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-center {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .results-section {
+            padding: 40px;
+            background: #f8f9fa;
+            display: none;
+        }
+
+        .career-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #4CAF50;
+            transition: transform 0.3s ease;
+        }
+
+        .career-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .career-title {
+            color: #2e7d32;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .match-score {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .career-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .required-skills {
+            margin-top: 15px;
+        }
+
+        .skill-tag {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            margin: 3px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #c62828;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .form-section, .results-section {
+                padding: 20px;
+            }
+            
+            .skills-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Career Path Finder</h1>
+            <p>Discover your ideal career path based on your skills and interests</p>
+        </div>
+
+        <form id="careerForm" class="form-section">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="experience">Years of Experience</label>
+                <select id="experience" name="experience" required>
+                    <option value="">Select Experience Level</option>
+                    <option value="0-1">0-1 years (Entry Level)</option>
+                    <option value="2-4">2-4 years (Junior)</option>
+                    <option value="5-7">5-7 years (Mid Level)</option>
+                    <option value="8-12">8-12 years (Senior)</option>
+                    <option value="13+">13+ years (Expert)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="education">Education Level</label>
+                <select id="education" name="education" required>
+                    <option value="">Select Education Level</option>
+                    <option value="high-school">High School</option>
+                    <option value="bachelor">Bachelor's Degree</option>
+                    <option value="master">Master's Degree</option>
+                    <option value="phd">PhD</option>
+                    <option value="bootcamp">Bootcamp/Certification</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Technical Skills (Select all that apply)</label>
+                <div class="skills-container" id="skillsContainer">
+                  
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="interests">Career Interests</label>
+                <textarea id="interests" name="interests" rows="4" 
+                    placeholder="Describe what type of work interests you, your career goals, preferred work environment, etc."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Preferred Location</label>
+                <select id="location" name="location">
+                    <option value="">Any Location</option>
+                    <option value="remote">Remote</option>
+                    <option value="hybrid">Hybrid</option>
+                    <option value="onsite">On-site</option>
+                </select>
+            </div>
+
+            <div class="btn-center">
+                <button type="submit" class="btn">Find My Career Path</button>
+            </div>
+        </form>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing your profile and finding the best career matches...</p>
+        </div>
+
+        <div class="results-section" id="results">
+            <h2>Your Recommended Career Paths</h2>
+            <div id="careerResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // Skills data
+        const skillsData = [
+            'JavaScript', 'Python', 'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Go',
+            'React', 'Angular', 'Vue.js', 'Node.js', 'Express.js', 'Spring Boot',
+            'Django', 'Flask', 'Laravel', 'Ruby on Rails',
+            'HTML/CSS', 'Bootstrap', 'Tailwind CSS', 'SASS/SCSS',
+            'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Oracle',
+            'AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes',
+            'Git', 'Jenkins', 'CI/CD', 'Linux', 'Nginx',
+            'Machine Learning', 'Data Analysis', 'AI/Deep Learning',
+            'UI/UX Design', 'Figma', 'Adobe Creative Suite',
+            'Project Management', 'Agile/Scrum', 'DevOps'
+        ];
+
+        // Populate skills checkboxes
+        function populateSkills() {
+            const container = document.getElementById('skillsContainer');
+            skillsData.forEach(skill => {
+                const skillItem = document.createElement('div');
+                skillItem.className = 'skill-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `skill-${skill.replace(/[^a-zA-Z0-9]/g, '')}`;
+                checkbox.name = 'skills';
+                checkbox.value = skill;
+                
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = skill;
+                label.style.margin = '0';
+                label.style.fontWeight = 'normal';
+                
+                skillItem.appendChild(checkbox);
+                skillItem.appendChild(label);
+                container.appendChild(skillItem);
+            });
+        }
+
+        // Form submission handler
+        document.getElementById('careerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const selectedSkills = Array.from(document.querySelectorAll('input[name="skills"]:checked'))
+                .map(cb => cb.value);
+            
+            const userData = {
+                name: formData.get('name'),
+                experience: formData.get('experience'),
+                education: formData.get('education'),
+                skills: selectedSkills,
+                interests: formData.get('interests'),
+                location: formData.get('location')
+            };
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            try {
+                // Call backend API
+                await callBackendAPI(userData);
+            } catch (error) {
+                showError('Failed to get career recommendations. Please try again.');
+            }
+        });
+
+        // Call backend API with fallback to mock data
+        async function callBackendAPI(userData) {
+            try {
+                console.log('Attempting to call backend API...');
+                const response = await fetch('http://localhost:8081/career-finder/api/career/find-matches', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const recommendations = await response.json();
+                console.log('Backend API response received:', recommendations);
+                displayResults(recommendations);
+                
+            } catch (error) {
+                console.warn('Backend API not available, using mock data:', error.message);
+                // Add a small delay to simulate network call
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Use mock data as fallback
+                const mockRecommendations = generateMockRecommendations(userData);
+                displayResults(mockRecommendations);
+            }
+        }
+
+        // Generate mock recommendations with better matching logic
+        function generateMockRecommendations(userData) {
+            console.log('Generating mock recommendations for:', userData);
+            
+            const careerPaths = [
+                {
+                    title: 'Full Stack Developer',
+                    matchScore: calculateMockScore(['JavaScript', 'React', 'Node.js', 'MongoDB'], userData.skills),
+                    description: 'Build end-to-end web applications using modern technologies. Work on both frontend user interfaces and backend server logic.',
+                    requiredSkills: ['JavaScript', 'React', 'Node.js', 'MongoDB', 'Express.js'],
+                    salaryRange: '$70,000 - $120,000',
+                    growthRate: 'High'
+                },
+                {
+                    title: 'Backend Developer',
+                    matchScore: calculateMockScore(['Java', 'Spring Boot', 'MySQL', 'AWS'], userData.skills),
+                    description: 'Focus on server-side development, database design, and API creation. Build robust and scalable backend systems.',
+                    requiredSkills: ['Java', 'Spring Boot', 'MySQL', 'AWS', 'REST APIs'],
+                    salaryRange: '$75,000 - $130,000',
+                    growthRate: 'High'
+                },
+                {
+                    title: 'Frontend Developer',
+                    matchScore: calculateMockScore(['JavaScript', 'React', 'HTML/CSS', 'UI/UX Design'], userData.skills),
+                    description: 'Create engaging user interfaces and exceptional user experiences. Work with modern frontend frameworks and design systems.',
+                    requiredSkills: ['JavaScript', 'React', 'HTML/CSS', 'UI/UX Design', 'Bootstrap'],
+                    salaryRange: '$65,000 - $110,000',
+                    growthRate: 'Medium-High'
+                },
+                {
+                    title: 'DevOps Engineer',
+                    matchScore: calculateMockScore(['AWS', 'Docker', 'Kubernetes', 'CI/CD'], userData.skills),
+                    description: 'Bridge development and operations teams. Automate deployment processes and manage cloud infrastructure.',
+                    requiredSkills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD', 'Linux'],
+                    salaryRange: '$80,000 - $140,000',
+                    growthRate: 'Very High'
+                },
+                {
+                    title: 'Data Scientist',
+                    matchScore: calculateMockScore(['Python', 'Machine Learning', 'Data Analysis'], userData.skills),
+                    description: 'Analyze complex datasets to derive business insights. Build predictive models and machine learning solutions.',
+                    requiredSkills: ['Python', 'Machine Learning', 'Data Analysis', 'SQL', 'Statistics'],
+                    salaryRange: '$85,000 - $150,000',
+                    growthRate: 'Very High'
+                },
+                {
+                    title: 'Mobile Developer',
+                    matchScore: calculateMockScore(['JavaScript', 'React', 'Mobile Development'], userData.skills),
+                    description: 'Create native and cross-platform mobile applications for iOS and Android platforms.',
+                    requiredSkills: ['React Native', 'Flutter', 'Swift', 'Kotlin', 'JavaScript'],
+                    salaryRange: '$70,000 - $125,000',
+                    growthRate: 'High'
+                }
+            ];
+
+            // Sort by match score and return top recommendations
+            return careerPaths
+                .sort((a, b) => b.matchScore - a.matchScore)
+                .slice(0, 4);
+        }
+        
+        // Calculate mock match score based on skill overlap
+        function calculateMockScore(requiredSkills, userSkills) {
+            if (!userSkills || userSkills.length === 0) {
+                return Math.floor(Math.random() * 30) + 50; // Random 50-80
+            }
+            
+            const matches = requiredSkills.filter(skill => 
+                userSkills.some(userSkill => 
+                    userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+                    skill.toLowerCase().includes(userSkill.toLowerCase())
+                )
+            );
+            
+            const baseScore = (matches.length / requiredSkills.length) * 100;
+            const randomVariation = Math.floor(Math.random() * 20) - 10; // ±10 points
+            
+            return Math.min(100, Math.max(40, Math.floor(baseScore + randomVariation)));
+        }
+
+        // Display results
+        function displayResults(recommendations) {
+            document.getElementById('loading').style.display = 'none';
+            
+            const resultsContainer = document.getElementById('careerResults');
+            resultsContainer.innerHTML = '';
+            
+            recommendations.forEach(career => {
+                const careerCard = document.createElement('div');
+                careerCard.className = 'career-card';
+                
+                careerCard.innerHTML = `
+                    <div class="career-title">${career.title}</div>
+                    <div class="match-score">${career.matchScore}% Match</div>
+                    <div class="career-description">${career.description}</div>
+                    <div><strong>Salary Range:</strong> ${career.salaryRange}</div>
+                    <div><strong>Growth Rate:</strong> ${career.growthRate}</div>
+                    <div class="required-skills">
+                        <strong>Key Skills:</strong><br>
+                        ${career.requiredSkills.map(skill => 
+                            `<span class="skill-tag">${skill}</span>`
+                        ).join('')}
+                    </div>
+                `;
+                
+                resultsContainer.appendChild(careerCard);
+            });
+            
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            populateSkills();
+        });
+    </script>
+</body>
+</html>-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Path Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%); /* Dark Gray theme background */
+            color: #e5e7eb; /* Light Gray text (Tailwind Gray-200) */
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .animated-bg-icons {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .animated-bg-icons span {
+            position: absolute;
+            color: rgba(209, 213, 219, 0.15); /* Brighter Gray icons (Tailwind Gray-300 with more opacity) */
+            font-size: 25px; /* Base size, JS will make it larger */
+            user-select: none;
+            animation: animateIcons 15s linear infinite; /* Duration will be overridden by JS */
+            bottom: -100px; /* Start further down to hide larger icons initially */
+            text-shadow: 0 0 8px rgba(229, 231, 235, 0.1); /* More prominent subtle glow */
+        }
+
+        @keyframes animateIcons {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-110vh) translateX(var(--random-drift)) rotate(var(--random-rotation));
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(39, 39, 42, 0.7); /* Dark Gray container background (Tailwind Zinc-800) */
+           /*background: transparent;  */
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #0d4297; /* Dark Blue for header */
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInHeader 0.5s ease-out forwards;
+            opacity: 0;
+            will-change: opacity;
+        }
+
+        .header::before,
+        .header::after {
+            content: "";
+            position: absolute;
+            top: -20%;
+            bottom: -20%;
+            width: 55%;
+            z-index: 0;
+        }
+
+        .header::before {
+            left: -10%;
+            background-color: rgba(0, 0, 0, 0.15);
+            transform: skewX(-20deg);
+        }
+
+        .header::after {
+            right: -10%;
+            background-color: rgba(255, 255, 255, 0.05);
+            transform: skewX(-20deg);
+        }
+
+        .header-content-wrapper {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .header-icon {
+            font-size: 3.5em;
+            animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s forwards;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+
+        .header-text-block {
+            text-align: left;
+        }
+
+        @keyframes fadeInHeader {
+            to { opacity: 1; }
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s forwards;
+            will-change: transform, opacity;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: rgba(229, 231, 235, 0.85);
+            opacity: 0;
+            max-width: 450px;
+            animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s forwards;
+            will-change: transform, opacity;
+        }
+
+        .form-section {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+
+        .form-group.animated-entry {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #9ca3af;
+            font-size: 1.1em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            background-color: #374151;
+            color: #e5e7eb;
+            border: 2px solid #4b5563;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #6b7280;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #0d4297; /* Dark Blue accent for focus border */
+            box-shadow: 0 0 10px rgba(13, 66, 151, 0.4); /* Dark Blue glow */
+        }
+
+        .skills-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            background: #374151;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .skill-item:hover {
+            background: #4b5563;
+        }
+
+        .skill-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            transform: scale(1.2);
+            accent-color: #0d4297; /* Dark Blue accent for checkbox */
+            transition: transform 0.2s ease;
+        }
+
+        .skill-item input[type="checkbox"]:checked {
+            transform: scale(1.3);
+        }
+
+        .skill-item input[type="checkbox"]:focus-visible {
+            outline: 2px solid #0d4297; /* Dark Blue outline for focus */
+            outline-offset: 2px;
+        }
+
+        .skill-item label {
+            cursor: pointer;
+            transition: color 0.2s ease, font-weight 0.2s ease;
+            font-weight: normal;
+            color: #d1d5db;
+        }
+
+        .skill-item input[type="checkbox"]:checked + label {
+            color: #2d7bd4; /* Lighter Blue for checked skill labels, matching career-title */
+            font-weight: bold;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #0d4297, #2e65be); /* Dark Blue gradient button */
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(46, 101, 190, 0.5); /* Dark Blue glow (using lighter end of gradient) */
+        }
+
+        .btn:active {
+            transform: translateY(0) scale(1);
+        }
+
+        .btn-center {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .results-section {
+            padding: 40px;
+            background: #111827;
+            display: none;
+        }
+        .results-section h2 {
+            color: #e5e7eb;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+
+        .career-card {
+            background: #374151;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            border-left: 5px solid #145bb8; /* Mid Blue accent border */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+
+        .career-card.animated-result {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .career-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .career-title {
+            color: #2d7bd4; /* Lighter Blue for career titles */
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .match-score {
+            background: linear-gradient(135deg, #1471b8, #0d6e94); /* Mid-Dark Blue gradient for match score */
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .career-description {
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .required-skills {
+            margin-top: 15px;
+        }
+        .required-skills strong {
+             color: #e5e7eb;
+        }
+
+        .skill-tag { /* Kept skill tags teal as a distinct secondary accent, can be changed to blue if preferred */
+            display: inline-block;
+            background: #0f766e; /* Darker Teal for skill tags (Tailwind Teal-700) */
+            color: #ccfbf1;    /* Very Light Teal for tag text (Tailwind Teal-100) */
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            margin: 3px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+        .loading p {
+            color: #9ca3af;
+        }
+
+
+        .spinner {
+            border: 4px solid #374151;
+            border-top: 4px solid #1476b8; /* Mid Blue spinner highlight */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            background: #450a0a;
+            color: #fecaca;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            margin-left: 40px;
+            margin-right: 40px;
+            border-left: 5px solid #ef4444;
+            display: none;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+        .error-message.visible {
+            display: block;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 40px 20px;
+            }
+            .header-content-wrapper {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .header-icon {
+                font-size: 2.8em;
+            }
+            .header h1 {
+                font-size: 2em;
+                text-align: center;
+            }
+            .header p {
+                font-size: 1em;
+                text-align: center;
+                max-width: 100%;
+            }
+            .header-text-block {
+                text-align: center;
+            }
+
+            .form-section, .results-section {
+                padding: 20px;
+            }
+            .error-message {
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+
+            .skills-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+          .animated-bg-icons {
+            animation: none !important;
+            display: none;
+          }
+          .header { opacity: 1; animation: none !important; }
+          .header-icon, .header h1, .header p, .form-group.animated-entry, .career-card.animated-result, .error-message.visible {
+            opacity: 1;
+            transform: translateY(0);
+            animation: none !important;
+          }
+        }
+         .back-button {
+
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            margin-left: 40px;
+            padding-left: 15px;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(4, 2, 116, 0.3);
+        }
+
+        .Btn1 {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+ /* background: linear-gradient(-50deg,rgb(39, 107, 255),rgb(112, 186, 255),rgb(39, 107, 255));*/
+ background: linear-gradient(to right, #1e3c72, #2a5298);
+  background-size: 250%;
+  background-position: left;
+  display: inline;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition-duration: .5s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.11);
+  margin-left: 650px;
+}
+
+.logoIcon {
+    font-size: 20px;
+}
+
+.tooltip {
+  position: absolute;
+  top: -20px;
+  opacity: 0;
+  background: linear-gradient(to right, #1e3c72, #2a5298);
+  color: white;
+  padding: 10px 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition-duration: .2s;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  font-size: 20px;
+  margin-left: -37px;
+  margin-top: -20px;
+}
+
+.tooltip::before {
+  position: absolute;
+  content: "";
+  width: 10px;
+  height: 10px;
+   background: linear-gradient(to right, #1e3c72, #2a5298);
+  background-size: 1000%;
+  background-position: center;
+  transform: rotate(45deg);
+  bottom: -15%;
+  transition-duration: .3s;
+}
+
+.Btn1:hover .tooltip {
+  top: -50px;
+  opacity: 1;
+  transition-duration: .3s;
+}
+
+.Btn1:hover {
+  background-position: right;
+  transition-duration: .5s;
+}
+.Btn2 {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+ /* background: linear-gradient(-50deg,rgb(39, 107, 255),rgb(112, 186, 255),rgb(39, 107, 255));*/
+ background: linear-gradient(to right, #cc9900, #b36b00);
+  background-size: 250%;
+  background-position: left;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition-duration: .5s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.11);
+  margin-left: 1050px;
+  margin-top: -87px;
+  margin-bottom: 40px;
+}
+.tooltip2 {
+  position: absolute;
+  top: -20px;
+  opacity: 0;
+  background: linear-gradient(to right, #cc9900, #b36b00);
+  color: white;
+  padding: 10px 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition-duration: .2s;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  font-size: 20px;
+  margin-left: -25px;
+  margin-top: -20px;
+}
+
+.tooltip2::before {
+  position: absolute;
+  content: "";
+  width: 10px;
+  height: 10px;
+ background: linear-gradient(to right, #cc9900, #b36b00);
+  background-size: 1000%;
+  background-position: center;
+  transform: rotate(45deg);
+  bottom: -15%;
+  transition-duration: .3s;
+}
+
+.Btn2:hover .tooltip2 {
+  top: -50px;
+  opacity: 1;
+  transition-duration: .3s;
+}
+
+.Btn2:hover {
+  background-position: right;
+  transition-duration: .5s;
+}
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-content-wrapper">
+                <span class="header-icon">🚀</span>
+                <div class="header-text-block">
+                    <h1>Career Path Explorer</h1>
+                    <p>Fuel Your Future with the Right Path</p>
+                </div>
+            </div>
+        </div>
+
+        <form id="careerForm" class="form-section">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="experience">Years of Experience</label>
+                <select id="experience" name="experience" required>
+                    <option value="">Select Experience Level</option>
+                    <option value="0-1">0-1 years (Entry Level)</option>
+                    <option value="2-4">2-4 years (Junior)</option>
+                    <option value="5-7">5-7 years (Mid Level)</option>
+                    <option value="8-12">8-12 years (Senior)</option>
+                    <option value="13+">13+ years (Expert)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="education">Education Level</label>
+                <select id="education" name="education" required>
+                    <option value="">Select Education Level</option>
+                    <option value="high-school">High School</option>
+                    <option value="bachelor">Bachelor's Degree</option>
+                    <option value="master">Master's Degree</option>
+                    <option value="phd">PhD</option>
+                    <option value="bootcamp">Bootcamp/Certification</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Technical Skills (Select all that apply)</label>
+                <div class="skills-container" id="skillsContainer">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="interests">Career Interests</label>
+                <textarea id="interests" name="interests" rows="4"
+                    placeholder="Describe what type of work interests you, your career goals, preferred work environment, etc."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Preferred Location</label>
+                <select id="location" name="location">
+                    <option value="">Any Location</option>
+                    <option value="remote">Remote</option>
+                    <option value="hybrid">Hybrid</option>
+                    <option value="onsite">On-site</option>
+                </select>
+            </div>
+
+            <div class="btn-center">
+                <button type="submit" class="btn">Find My Career Path</button>
+            </div>
+        </form>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing your profile and finding the best career matches...</p>
+        </div>
+
+        <div class="results-section" id="results">
+            <h2>Your Recommended Career Paths</h2>
+            <div id="careerResults"></div>
+        </div>
+        <button class="back-button" onclick="window.location.href='profile.html'">← Back to Profile</button>
+    
+        <button class="Btn1" onclick="window.location.href='openlibrary.html'">
+   <span class="logoIcon">📚</span>
+   <span class="tooltip">Resources</span>
+</button>
+<button class="Btn2" onclick="window.location.href='mentor.html'">
+   <span class="logoIcon">🧑🏻</span>
+   <span class="tooltip2">Mentor</span>
+</button>
+    </div>
+    <script>
+        // Skills data
+        const skillsData = [
+            'JavaScript', 'Python', 'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Go',
+            'React', 'Angular', 'Vue.js', 'Node.js', 'Express.js', 'Spring Boot',
+            'Django', 'Flask', 'Laravel', 'Ruby on Rails',
+            'HTML/CSS', 'Bootstrap', 'Tailwind CSS', 'SASS/SCSS',
+            'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Oracle',
+            'AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes',
+            'Git', 'Jenkins', 'CI/CD', 'Linux', 'Nginx',
+            'Machine Learning', 'Data Analysis', 'AI/Deep Learning',
+            'UI/UX Design', 'Figma', 'Adobe Creative Suite',
+            'Project Management', 'Agile/Scrum', 'DevOps'
+        ];
+
+        function populateSkills() {
+            const container = document.getElementById('skillsContainer');
+            skillsData.forEach(skill => {
+                const skillItem = document.createElement('div');
+                skillItem.className = 'skill-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `skill-${skill.replace(/[^a-zA-Z0-9]/g, '')}`;
+                checkbox.name = 'skills';
+                checkbox.value = skill;
+
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = skill;
+
+                skillItem.appendChild(checkbox);
+                skillItem.appendChild(label);
+                container.appendChild(skillItem);
+            });
+        }
+
+        document.getElementById('careerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const selectedSkills = Array.from(document.querySelectorAll('input[name="skills"]:checked'))
+                .map(cb => cb.value);
+
+            const userData = {
+                name: formData.get('name'),
+                experience: formData.get('experience'),
+                education: formData.get('education'),
+                skills: selectedSkills,
+                interests: formData.get('interests'),
+                location: formData.get('location')
+            };
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.remove('visible');
+            errorDiv.style.display = 'none';
+
+            try {
+                await callBackendAPI(userData);
+            } catch (error) {
+                console.error('Error in submission process:', error);
+                showError('Failed to get career recommendations. Please try again.');
+            }
+        });
+
+        async function callBackendAPI(userData) {
+            try {
+                console.log('Attempting to call backend API with data:', userData);
+                const response = await fetch('http://localhost:8081/career-finder/api/career/find-matches', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const recommendations = await response.json();
+                console.log('Backend API response received:', recommendations);
+                displayResults(recommendations);
+
+            } catch (error) {
+                console.warn('Backend API not available or error occurred, using mock data:', error.message);
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                const mockRecommendations = generateMockRecommendations(userData);
+                displayResults(mockRecommendations);
+            }
+        }
+
+        function generateMockRecommendations(userData) {
+            console.log('Generating mock recommendations for:', userData);
+
+            const careerPaths = [
+                {
+                    title: 'Full Stack Developer',
+                    matchScore: calculateMockScore(['JavaScript', 'React', 'Node.js', 'MongoDB'], userData.skills),
+                    description: 'Build end-to-end web applications using modern technologies. Work on both frontend user interfaces and backend server logic.',
+                    requiredSkills: ['JavaScript', 'React', 'Node.js', 'MongoDB', 'Express.js', 'Git'],
+                    salaryRange: '$70,000 - $120,000',
+                    growthRate: 'High'
+                },
+                {
+                    title: 'Backend Developer',
+                    matchScore: calculateMockScore(['Java', 'Spring Boot', 'MySQL', 'AWS'], userData.skills),
+                    description: 'Focus on server-side development, database design, and API creation. Build robust and scalable backend systems.',
+                    requiredSkills: ['Java', 'Spring Boot', 'MySQL', 'AWS', 'REST APIs', 'Docker'],
+                    salaryRange: '$75,000 - $130,000',
+                    growthRate: 'High'
+                },
+                {
+                    title: 'Frontend Developer',
+                    matchScore: calculateMockScore(['JavaScript', 'React', 'HTML/CSS', 'UI/UX Design'], userData.skills),
+                    description: 'Create engaging user interfaces and exceptional user experiences. Work with modern frontend frameworks and design systems.',
+                    requiredSkills: ['JavaScript', 'React', 'HTML/CSS', 'UI/UX Design', 'Bootstrap', 'Figma'],
+                    salaryRange: '$65,000 - $110,000',
+                    growthRate: 'Medium-High'
+                },
+                {
+                    title: 'DevOps Engineer',
+                    matchScore: calculateMockScore(['AWS', 'Docker', 'Kubernetes', 'CI/CD', 'Linux'], userData.skills),
+                    description: 'Bridge development and operations teams. Automate deployment processes and manage cloud infrastructure.',
+                    requiredSkills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD', 'Linux', 'Jenkins', 'Terraform'],
+                    salaryRange: '$80,000 - $140,000',
+                    growthRate: 'Very High'
+                },
+                {
+                    title: 'Data Scientist',
+                    matchScore: calculateMockScore(['Python', 'Machine Learning', 'Data Analysis', 'SQL'], userData.skills),
+                    description: 'Analyze complex datasets to derive business insights. Build predictive models and machine learning solutions.',
+                    requiredSkills: ['Python', 'Machine Learning', 'Data Analysis', 'SQL', 'Statistics', 'R'],
+                    salaryRange: '$85,000 - $150,000',
+                    growthRate: 'Very High'
+                },
+                {
+                    title: 'Mobile Developer (React Native)',
+                    matchScore: calculateMockScore(['JavaScript', 'React', 'React Native', 'Mobile Development'], userData.skills),
+                    description: 'Create cross-platform mobile applications for iOS and Android using React Native framework.',
+                    requiredSkills: ['JavaScript', 'React', 'React Native', 'Redux/Context API', 'REST APIs', 'Git'],
+                    salaryRange: '$70,000 - $125,000',
+                    growthRate: 'High'
+                }
+            ];
+
+            return careerPaths
+                .sort((a, b) => b.matchScore - a.matchScore)
+                .slice(0, 4);
+        }
+
+        function calculateMockScore(requiredSkills, userSkills) {
+            if (!userSkills || userSkills.length === 0) {
+                return Math.floor(Math.random() * 30) + 40;
+            }
+
+            const lowerUserSkills = userSkills.map(s => s.toLowerCase());
+            const matches = requiredSkills.filter(skill =>
+                lowerUserSkills.some(userSkill =>
+                    userSkill.includes(skill.toLowerCase()) ||
+                    skill.toLowerCase().includes(userSkill)
+                )
+            );
+
+            let score = (matches.length / requiredSkills.length) * 80;
+            score += Math.min(20, userSkills.length * 2);
+
+            const randomVariation = Math.floor(Math.random() * 10) - 5;
+
+            return Math.min(98, Math.max(40, Math.floor(score + randomVariation)));
+        }
+
+        function displayResults(recommendations) {
+            document.getElementById('loading').style.display = 'none';
+
+            const resultsContainer = document.getElementById('careerResults');
+            resultsContainer.innerHTML = '';
+
+            if (recommendations.length === 0) {
+                resultsContainer.innerHTML = '<p style="color: #9ca3af;">No specific career paths match your current profile. Try adjusting your skills or interests.</p>';
+            } else {
+                recommendations.forEach((career, index) => {
+                    const careerCard = document.createElement('div');
+                    careerCard.className = 'career-card';
+
+                    careerCard.innerHTML = `
+                        <div class="career-title">${career.title}</div>
+                        <div class="match-score">${career.matchScore}% Match</div>
+                        <div class="career-description">${career.description}</div>
+                        <div><strong>Salary Range:</strong> ${career.salaryRange || 'N/A'}</div>
+                        <div><strong>Growth Rate:</strong> ${career.growthRate || 'N/A'}</div>
+                        <div class="required-skills">
+                            <strong>Key Skills:</strong><br>
+                            ${career.requiredSkills.map(skill =>
+                                `<span class="skill-tag">${skill}</span>`
+                            ).join('')}
+                        </div>
+                    `;
+                    careerCard.classList.add('animated-result');
+                    careerCard.style.animationDelay = `${index * 0.15}s`;
+
+                    resultsContainer.appendChild(careerCard);
+                });
+            }
+
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('visible');
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function createAnimatedIcons() {
+            const iconContainer = document.createElement('div');
+            iconContainer.className = 'animated-bg-icons';
+            document.body.insertBefore(iconContainer, document.body.firstChild);
+
+            const icons = [
+                '🚀', '💼', '💡', '💻', '📈', '🛠️', '🌐', '📊', '🧑‍💻', '🎯', '🔗', '🧠','🧩','⚙️','⭐',
+                '✨', '🛰️', '📡', '🧭', '🌌', '🌠', '💫', '🔭', '🧬', '⚛️', '⚡', '📡', '🛡️', '🔑' // More diverse icons
+            ];
+            const numIcons = Math.floor(window.innerWidth / 80); // Adjusted for larger icons and more movement
+
+            for (let i = 0; i < numIcons; i++) {
+                const iconSpan = document.createElement('span');
+                iconSpan.textContent = icons[Math.floor(Math.random() * icons.length)];
+                iconSpan.style.left = `${Math.random() * 100}vw`;
+                iconSpan.style.fontSize = `${Math.random() * 25 + 25}px`; // Range: 25px to 50px
+
+                const animationDuration = Math.random() * 15 + 20; // Range: 20s to 35s
+                iconSpan.style.animationDuration = `${animationDuration}s`;
+                iconSpan.style.animationDelay = `-${Math.random() * animationDuration}s`;
+
+                iconSpan.style.setProperty('--random-drift', `${(Math.random() - 0.5) * 200}px`); // Increased drift
+                iconSpan.style.setProperty('--random-rotation', `${(Math.random() - 0.5) * 180}deg`); // Increased rotation
+
+                iconContainer.appendChild(iconSpan);
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            populateSkills();
+            createAnimatedIcons();
+
+            const formGroups = document.querySelectorAll('.form-section .form-group');
+            const initialDelay = 1.0;
+            formGroups.forEach((group, index) => {
+                group.classList.add('animated-entry');
+                group.style.animationDelay = `${initialDelay + index * 0.07}s`;
+            });
+        });
+    </script>
+</body>
+</html>

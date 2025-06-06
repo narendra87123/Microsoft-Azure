@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentor Mapper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(100deg, #141E30 , #243B55); /* Dark theme gradient */
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0; /* Default light text color for dark theme */
+            position: relative; /* For z-index context of animated icons */
+            overflow-x: hidden; /* Prevent horizontal scroll from icons */
+        }
+
+        /* Animated Background Styling from Resume Builder */
+        .animated-bg {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 0;
+          overflow: hidden;
+          pointer-events: none;
+        }
+        .animated-bg span.icon-float {
+            position: absolute;
+            bottom: -30px;
+            color: rgba(255, 255, 255, 0.4); /* Default color for icons */
+            font-size: 20px;
+            opacity: 0;
+            animation: floatUpCareer 15s linear infinite;
+            user-select: none;
+        }
+        .icon-float.icon-lightbulb::before { content: "💡"; } .icon-float.icon-gear::before { content: "⚙️"; } .icon-float.icon-briefcase::before { content: "💼"; } .icon-float.icon-arrow::before { content: "📈"; } .icon-float.icon-cap::before { content: "🎓"; } .icon-float.icon-speech::before { content: "💬"; } .icon-float.icon-star::before { content: "⭐"; } .icon-float.icon-network::before { content: "🌐"; } .icon-float.icon-puzzle::before { content: "🧩"; } .icon-float.icon-target::before { content: "🎯"; } .icon-float.icon-pencil::before { content: "✏️"; } .icon-float.icon-rocket::before { content: "🚀"; }
+
+        @keyframes floatUpCareer {
+          0% { transform: translateY(0vh) translateX(0vw); opacity: 0; }
+          10%, 90% { opacity: 0.8; }
+          100% { transform: translateY(-110vh) translateX(calc(var(--drift-x, 0) * 2vw)); opacity: 0; }
+        }
+
+        .animated-bg span:nth-child(1) { left: 8%; animation-delay: 0s; font-size: 38px; --drift-x: -1.2; color: rgba(255,255,255,0.44);}
+        .animated-bg span:nth-child(2) { left: 18%; animation-delay: 2.5s; font-size: 30px; --drift-x: 1; animation-duration: 18s; }
+        .animated-bg span:nth-child(3) { left: 28%; animation-delay: 4s; font-size: 42px; --drift-x: -1.5; color: rgba(255,255,255,0.50);}
+        .animated-bg span:nth-child(4) { left: 38%; animation-delay: 1s; font-size: 32px; --drift-x: 0.5; animation-duration: 13s; }
+        .animated-bg span:nth-child(5) { left: 48%; animation-delay: 5s; font-size: 40px; --drift-x: -0.8; animation-duration: 20s; color: rgba(255,255,255,0.35);}
+        .animated-bg span:nth-child(6) { left: 58%; animation-delay: 3s; font-size: 30px; --drift-x: 1.2; animation-duration: 16s; }
+        .animated-bg span:nth-child(7) { left: 68%; animation-delay: 0.8s; font-size: 45px; --drift-x: -0.8; color: rgba(255,255,255,0.55);}
+        .animated-bg span:nth-child(8) { left: 78%; animation-delay: 4.5s; font-size: 28px; --drift-x: 0.8; animation-duration: 14s; }
+        .animated-bg span:nth-child(9) { left: 88%; animation-delay: 1.5s; font-size: 36px; --drift-x: -1.2; animation-duration: 19s; color: rgba(255,255,255,0.48);}
+        .animated-bg span:nth-child(10) { left: 3%; animation-delay: 3.5s; font-size: 35px; --drift-x: 1.1; animation-duration: 17s; }
+        .animated-bg span:nth-child(11) { left: 13%; animation-delay: 6s; font-size: 28px; --drift-x: -0.7; color: rgba(255,255,255,0.42);}
+        .animated-bg span:nth-child(12) { left: 83%; animation-delay: 2s; font-size: 38px; --drift-x: 0.7; animation-duration: 15s; }
+        /* End of Animated Background Styling from Resume Builder */
+
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(44, 47, 54, 0.5); /* Dark container background */
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative; /* To ensure it's above the animated icons */
+            z-index: 1;
+        }
+
+        h1 {
+            text-align: center;
+          background: linear-gradient(#0d4297, #2e65be);
+          -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+               font-weight: bold; 
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+/*.back-button {
+
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(4, 2, 116, 0.3);
+        }
+*/
+/* From Uiverse.io by satyamchaudharydev */ 
+.back-button {
+  position: relative;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+  padding-block: 0.5rem;
+  padding-inline: 1.25rem;
+   background: linear-gradient(to right, #2b5876, #4e4376);
+  border-radius: 20px;
+  display: inline;
+  align-items: center;
+  justify-content: center;
+  color: #ffff;
+  gap: 10px;
+  font-weight: bold;
+  border: 3px solid #bbaeaea4;
+  outline: none;
+  overflow: hidden;
+  font-size: 20px;
+  cursor: pointer;
+  margin-bottom: 30px;
+  padding-left: 30px;
+  padding-right: 30px;
+  margin-left: 50px;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+
+.back-button:hover {
+  transform: scale(1.05);
+  border-color: #fff9;
+}
+
+.back-button:hover .icon {
+  transform: translate(4px);
+}
+
+.back-button:hover::before {
+  animation: shine 1.5s ease-out infinite;
+}
+
+.back-button::before {
+  content: "";
+  position: absolute;
+  width: 100px;
+  height: 100%;
+  background-image: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0) 70%
+  );
+  top: 0;
+  left: -100px;
+  opacity: 0.6;
+}
+
+@keyframes shine {
+  0% {
+    left: -100px;
+  }
+
+  60% {
+    left: 100%;
+  }
+
+  to {
+    left: 100%;
+  }
+}
+.Btn1 {
+  position: relative;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+  padding-block: 0.5rem;
+  padding-inline: 1.25rem;
+   background: linear-gradient(to right, #2b5876, #4e4376);
+  border-radius: 20px;
+  display: inline;
+  align-items: center;
+  justify-content: center;
+  color: #ffff;
+  gap: 10px;
+  font-weight: bold;
+  border: 3px solid #bbaeaea4;
+  outline: none;
+  overflow: hidden;
+  font-size: 20px;
+  cursor: pointer;
+  margin-bottom: 30px;
+  padding-left: 30px;
+  padding-right: 30px;
+  margin-left: 580px;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+
+.Btn1:hover {
+  transform: scale(1.05);
+  border-color: #fff9;
+}
+
+.Btn1:hover .icon {
+  transform: translate(4px);
+}
+
+.Btn1:hover::before {
+  animation: shine 1.5s ease-out infinite;
+}
+
+.Btn1::before {
+  content: "";
+  position: absolute;
+  width: 100px;
+  height: 100%;
+  background-image: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0) 70%
+  );
+  top: 0;
+  left: -100px;
+  opacity: 0.6;
+}
+
+@keyframes shine {
+  0% {
+    left: -100px;
+  }
+
+  60% {
+    left: 100%;
+  }
+
+  to {
+    left: 100%;
+  }
+}
+
+
+        .input-section {
+            background: #353941;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #4a4e57;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #b0b8c4;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #4a4e57;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background-color: #25272c;
+            color: #e0e0e0;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #7a8eea;
+        }
+
+        select option {
+            background: #25272c;
+            color: #e0e0e0;
+        }
+
+
+        .skills-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .skills-input input {
+            flex: 1;
+        }
+
+        .add-skill-btn {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .add-skill-btn:hover {
+           background: linear-gradient(135deg, #43cea2, #185a9d);
+
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .skill-tag {
+            background: linear-gradient(135deg, #0d4297, #2e65be);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .remove-skill {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+      /*  .find-btn {
+            background: linear-gradient(45deg, #7a8eea, #8e63c4);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.3s, background 0.3s;
+        }
+
+        .find-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(45deg, #6a7ee0, #7e53b4);
+        }*/
+        .find-btn {
+            background: linear-gradient(135deg, #0d4297, #2e65be); /* Dark Blue gradient button */
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 330px;
+            margin-top: 20px;
+        }
+
+        .find-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(46, 101, 190, 0.5); /* Dark Blue glow (using lighter end of gradient) */
+        }
+
+        .find-btn:active {
+            transform: translateY(0) scale(1);
+        }
+
+
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .results-section h2 {
+            text-align: center;
+            color: #cbd5e0;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        .mentor-card {
+            background: #353941;
+            border: 2px solid #4a4e57;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mentor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            border-color: #7a8eea;
+        }
+
+        .mentor-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #7a8eea, #8e63c4);
+        }
+
+        .mentor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .mentor-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .compatibility-score {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .mentor-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            color: #b0b8c4;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #d0d8e0;
+        }
+
+        .mentor-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 5px;
+        }
+
+        .mentor-skill {
+            background: #40444c;
+            color: #b0bac9;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            border: 1px solid #5a5e67;
+        }
+
+        .matched-skill {
+            background: #1c4b27;
+            border-color: #28a745;
+            color: #a3e9b6;
+        }
+
+        .contact-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
+        }
+
+        .contact-info {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .contact-method {
+            background: #40444c;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #b0b8c4;
+            border: 1px solid #5a5e67;
+        }
+        .contact-method a {
+            color: #82aaff;
+            text-decoration: none;
+        }
+        .contact-method a:hover {
+            text-decoration: underline;
+        }
+
+
+        .no-results {
+            text-align: center;
+            color: #a0a8b4;
+            font-size: 18px;
+            margin-top: 30px;
+            background-color: #353941;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .no-results h3{
+            color: #e0e0e0;
+            margin-bottom: 10px;
+        }
+
+
+        @media (max-width: 768px) {
+            .mentor-details {
+                grid-template-columns: 1fr;
+            }
+
+            .mentor-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            /* Removed old .animated-background-icons media query styles */
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg">
+        <span class="icon-float icon-lightbulb"></span>
+        <span class="icon-float icon-gear"></span>
+        <span class="icon-float icon-briefcase"></span>
+        <span class="icon-float icon-arrow"></span>
+        <span class="icon-float icon-cap"></span>
+        <span class="icon-float icon-speech"></span>
+        <span class="icon-float icon-star"></span>
+        <span class="icon-float icon-network"></span>
+        <span class="icon-float icon-puzzle"></span>
+        <span class="icon-float icon-target"></span>
+        <span class="icon-float icon-pencil"></span>
+        <span class="icon-float icon-rocket"></span>
+    </div>
+
+    <div class="container">
+        <h1> 🎯 Map Your Mentor</h1>
+           <button class="back-button" onclick="window.location.href='profile.html'">← Back to Profile</button>
+            <button class="Btn1" onclick="window.location.href='JobTrends.html'">
+   <span class="logoIcon">📈</span>
+   <span class="tooltip">Job Trends</span>
+</button>
+        <div class="input-section">
+            <div class="form-group">
+                <label for="experience">Your Experience Level:</label>
+                <select id="experience">
+                    <option value="beginner">Beginner (0-2 years)</option>
+                    <option value="intermediate">Intermediate (2-5 years)</option>
+                    <option value="advanced">Advanced (5+ years)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="field">Field of Interest:</label>
+                <select id="field">
+                    <option value="web-development">Web Development</option>
+                    <option value="mobile-development">Mobile Development</option>
+                    <option value="data-science">Data Science</option>
+                    <option value="machine-learning">Machine Learning</option>
+                    <option value="cybersecurity">Cybersecurity</option>
+                    <option value="devops">DevOps</option>
+                    <option value="ui-ux">UI/UX Design</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Your Skills:</label>
+                <div class="skills-input">
+                    <input type="text" id="skillInput" placeholder="Enter a skill (e.g., JavaScript, Python)">
+                    <button class="add-skill-btn" onclick="addSkill()">Add Skill</button>
+                </div>
+                <div class="skills-list" id="skillsList"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Preferred Location:</label>
+                <select id="location">
+                    <option value="any">Any Location</option>
+                    <option value="north-america">North America</option>
+                    <option value="europe">Europe</option>
+                    <option value="asia">Asia</option>
+                    <option value="remote">Remote Only</option>
+                </select>
+            </div>
+
+            <button class="find-btn" onclick="findMentors()">Find My Perfect Mentor</button>
+        </div>
+
+        <div class="results-section" id="results">
+            <!-- Results will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        // DSA Implementation: Hash Map for efficient lookups
+        class HashMap {
+            constructor() {
+                this.buckets = new Array(16);
+                this.size = 0;
+            }
+
+            hash(key) {
+                let hash = 0;
+                for (let i = 0; i < key.length; i++) {
+                    hash = (hash + key.charCodeAt(i) * i) % this.buckets.length;
+                }
+                return hash;
+            }
+
+            set(key, value) {
+                const index = this.hash(key);
+                if (!this.buckets[index]) {
+                    this.buckets[index] = [];
+                }
+
+                const bucket = this.buckets[index];
+                const existingPair = bucket.find(pair => pair[0] === key);
+
+                if (existingPair) {
+                    existingPair[1] = value;
+                } else {
+                    bucket.push([key, value]);
+                    this.size++;
+                    // Dynamic resizing if load factor > 0.7
+                    if (this.size / this.buckets.length > 0.7) {
+                        this.resize(this.buckets.length * 2);
+                    }
+                }
+            }
+
+            get(key) {
+                const index = this.hash(key);
+                const bucket = this.buckets[index];
+                if (bucket) {
+                    const pair = bucket.find(pair => pair[0] === key);
+                    return pair ? pair[1] : undefined;
+                }
+                return undefined;
+            }
+
+            resize(newCapacity) {
+                const oldBuckets = this.buckets;
+                this.buckets = new Array(newCapacity);
+                this.size = 0;
+                for (const bucket of oldBuckets) {
+                    if (bucket) {
+                        for (const [key, value] of bucket) {
+                            this.set(key, value);
+                        }
+                    }
+                }
+            }
+        }
+
+        // DSA Implementation: Priority Queue (Min Heap)
+        class PriorityQueue {
+            constructor() {
+                this.heap = [];
+            }
+
+            enqueue(element, priority) {
+                this.heap.push({ element, priority });
+                this.heapifyUp();
+            }
+
+            dequeue() {
+                if (this.heap.length === 0) return null;
+                if (this.heap.length === 1) return this.heap.pop();
+
+                const root = this.heap[0];
+                this.heap[0] = this.heap.pop();
+                this.heapifyDown();
+                return root;
+            }
+
+            heapifyUp() {
+                let index = this.heap.length - 1;
+                while (index > 0) {
+                    const parentIndex = Math.floor((index - 1) / 2);
+                    if (this.heap[parentIndex].priority <= this.heap[index].priority) break;
+
+                    [this.heap[parentIndex], this.heap[index]] = [this.heap[index], this.heap[parentIndex]];
+                    index = parentIndex;
+                }
+            }
+
+            heapifyDown() {
+                let index = 0;
+                const length = this.heap.length;
+                const element = this.heap[0];
+
+                while (true) {
+                    let leftChildIdx = 2 * index + 1;
+                    let rightChildIdx = 2 * index + 2;
+                    let leftChild, rightChild;
+                    let swap = null;
+
+                    if (leftChildIdx < length) {
+                        leftChild = this.heap[leftChildIdx];
+                        if (leftChild.priority < element.priority) {
+                            swap = leftChildIdx;
+                        }
+                    }
+                    if (rightChildIdx < length) {
+                        rightChild = this.heap[rightChildIdx];
+                        if (
+                            (swap === null && rightChild.priority < element.priority) ||
+                            (swap !== null && rightChild.priority < leftChild.priority)
+                        ) {
+                            swap = rightChildIdx;
+                        }
+                    }
+                    if (swap === null) break;
+                    this.heap[index] = this.heap[swap];
+                    this.heap[swap] = element;
+                    index = swap;
+                }
+            }
+
+            isEmpty() {
+                return this.heap.length === 0;
+            }
+        }
+
+        // DSA Implementation: Graph for mentor connections
+        class Graph {
+            constructor() {
+                this.adjacencyList = new HashMap();
+            }
+
+            addVertex(vertex) {
+                if (!this.adjacencyList.get(vertex)) {
+                    this.adjacencyList.set(vertex, []);
+                }
+            }
+
+            addEdge(v1, v2, weight = 1) {
+                this.addVertex(v1);
+                this.addVertex(v2);
+                this.adjacencyList.get(v1).push({ node: v2, weight });
+                this.adjacencyList.get(v2).push({ node: v1, weight });
+            }
+
+            findConnections(startVertex, maxDepth = 2) {
+                const visited = new Set();
+                const queue = [{ vertex: startVertex, depth: 0 }];
+                const connections = [];
+
+                if (!this.adjacencyList.get(startVertex)) return connections;
+
+                while (queue.length > 0) {
+                    const { vertex, depth } = queue.shift();
+
+                    if (visited.has(vertex) || depth > maxDepth) continue;
+                    visited.add(vertex);
+
+                    if (depth > 0) {
+                        connections.push({ vertex, depth });
+                    }
+
+                    const neighbors = this.adjacencyList.get(vertex) || [];
+                    for (const neighbor of neighbors) {
+                        if (!visited.has(neighbor.node)) {
+                            queue.push({ vertex: neighbor.node, depth: depth + 1 });
+                        }
+                    }
+                }
+                return connections;
+            }
+        }
+
+        const mentors = [
+            { id: 1, name: "Sarah Chen", experience: "senior", field: "web-development", skills: ["JavaScript", "React", "Node.js", "MongoDB", "AWS", "TypeScript"], location: "north-america", rating: 4.9, studentsCount: 45, yearsExperience: 8, company: "Google", email: "sarah.chen@example.com", linkedin: "linkedin.com/in/sarahchen", calendly: "calendly.com/sarahchen" },
+            { id: 2, name: "Alex Rodriguez", experience: "expert", field: "data-science", skills: ["Python", "Machine Learning", "TensorFlow", "SQL", "Statistics", "Pandas"], location: "europe", rating: 4.8, studentsCount: 32, yearsExperience: 10, company: "Meta", email: "alex.rodriguez@example.com", linkedin: "linkedin.com/in/alexrodriguez", calendly: "calendly.com/alexrodriguez" },
+            { id: 3, name: "Priya Sharma", experience: "senior", field: "mobile-development", skills: ["Swift", "Kotlin", "React Native", "Flutter", "Firebase", "API Design"], location: "asia", rating: 4.7, studentsCount: 28, yearsExperience: 7, company: "Apple", email: "priya.sharma@example.com", linkedin: "linkedin.com/in/priyasharma", calendly: "calendly.com/priyasharma" },
+            { id: 4, name: "David Wilson", experience: "expert", field: "cybersecurity", skills: ["Network Security", "Penetration Testing", "Python", "Linux", "Cryptography", "SIEM"], location: "north-america", rating: 4.9, studentsCount: 52, yearsExperience: 12, company: "Microsoft", email: "david.wilson@example.com", linkedin: "linkedin.com/in/davidwilson", calendly: "calendly.com/davidwilson" },
+            { id: 5, name: "Emma Thompson", experience: "senior", field: "ui-ux", skills: ["Figma", "Adobe XD", "User Research", "Prototyping", "JavaScript", "Accessibility"], location: "europe", rating: 4.8, studentsCount: 38, yearsExperience: 6, company: "Spotify", email: "emma.thompson@example.com", linkedin: "linkedin.com/in/emmathompson", calendly: "calendly.com/emmathompson" },
+            { id: 6, name: "Raj Patel", experience: "expert", field: "devops", skills: ["Docker", "Kubernetes", "AWS", "Jenkins", "Python", "Terraform"], location: "remote", rating: 4.9, studentsCount: 41, yearsExperience: 11, company: "Netflix", email: "raj.patel@example.com", linkedin: "linkedin.com/in/rajpatel", calendly: "calendly.com/rajpatel" },
+            { id: 7, name: "Lisa Zhang", experience: "senior", field: "machine-learning", skills: ["Python", "PyTorch", "Deep Learning", "Computer Vision", "NLP", "Statistics"], location: "asia", rating: 4.8, studentsCount: 35, yearsExperience: 7, company: "Nvidia", email: "lisa.zhang@example.com", linkedin: "linkedin.com/in/lisazhang", calendly: "calendly.com/lisazhang" },
+            { id: 8, name: "Michael Brown", experience: "senior", field: "web-development", skills: ["Vue.js", "Python", "Django", "PostgreSQL", "GraphQL", "Nuxt.js"], location: "north-america", rating: 4.7, studentsCount: 29, yearsExperience: 7, company: "Shopify", email: "michael.brown@example.com", linkedin: "linkedin.com/in/michaelbrown", calendly: "calendly.com/michaelbrown" },
+            { id: 9, name: "Kenji Tanaka", experience: "intermediate", field: "web-development", skills: ["HTML", "CSS", "JavaScript", "Git", "Bootstrap"], location: "asia", rating: 4.5, studentsCount: 15, yearsExperience: 3, company: "Startup Inc.", email: "kenji.tanaka@example.com", linkedin: "linkedin.com/in/kenjitanaka", calendly: "calendly.com/kenjitanaka" }
+        ];
+
+        let userSkills = [];
+        let mentorGraph = new Graph();
+
+        function initializeMentorNetwork() {
+            mentors.forEach(mentor => mentorGraph.addVertex(mentor.id));
+            for (let i = 0; i < mentors.length; i++) {
+                for (let j = i + 1; j < mentors.length; j++) {
+                    const sharedSkills = mentors[i].skills.filter(skill =>
+                        mentors[j].skills.map(s => s.toLowerCase()).includes(skill.toLowerCase())
+                    ).length;
+                    const sameField = mentors[i].field === mentors[j].field;
+                    if (sharedSkills > 0 || sameField) {
+                        const weight = (sharedSkills * 2) + (sameField ? 3 : 0);
+                        if (weight > 0) mentorGraph.addEdge(mentors[i].id, mentors[j].id, weight);
+                    }
+                }
+            }
+        }
+
+        function addSkill() {
+            const skillInput = document.getElementById('skillInput');
+            const skill = skillInput.value.trim();
+            if (skill && !userSkills.map(s => s.toLowerCase()).includes(skill.toLowerCase())) {
+                userSkills.push(skill);
+                skillInput.value = '';
+                updateSkillsDisplay();
+            } else if (skill) {
+                alert("Skill already added!");
+            }
+        }
+
+        function removeSkill(skillToRemove) {
+            userSkills = userSkills.filter(s => s.toLowerCase() !== skillToRemove.toLowerCase());
+            updateSkillsDisplay();
+        }
+
+        function updateSkillsDisplay() {
+            const skillsList = document.getElementById('skillsList');
+            skillsList.innerHTML = userSkills.map(skill =>
+                `<span class="skill-tag">${skill}<button class="remove-skill" onclick="removeSkill('${skill}')">×</button></span>`
+            ).join('');
+        }
+
+        function calculateCompatibilityScore(mentor, userProfile) {
+            let score = 0;
+            const weights = { skillMatch: 45, fieldMatch: 25, experienceMatch: 20, locationMatch: 5, rating: 5 };
+            const userSkillsLower = userProfile.skills.map(s => s.toLowerCase());
+            const commonSkills = userSkillsLower.filter(skill => mentor.skills.map(s => s.toLowerCase()).includes(skill));
+
+            score += ((userSkillsLower.length > 0 ? (commonSkills.length / userSkillsLower.length) : 0.2) * 100 * weights.skillMatch) / 100;
+            if (mentor.field === userProfile.field) score += weights.fieldMatch;
+            score += getExperienceBonus(mentor.experience, userProfile.experience) * weights.experienceMatch / 100;
+            if (userProfile.location === 'any' || mentor.location === userProfile.location || mentor.location === 'remote' || (userProfile.location === 'remote' && mentor.location !== 'any')) {
+                score += weights.locationMatch;
+            }
+            score += (mentor.rating / 5) * weights.rating;
+            return Math.min(100, Math.round(score));
+        }
+
+        function getExperienceBonus(mentorExpStr, userExpStr) {
+            const expLevels = { beginner: 0, intermediate: 1, advanced: 2, senior: 3, expert: 4 };
+            const mentorLevelNum = expLevels[mentorExpStr.toLowerCase()] ?? expLevels.senior;
+            const userLevelNum = expLevels[userExpStr];
+            if (mentorLevelNum < userLevelNum) return 20;
+            if (mentorLevelNum === userLevelNum) return 80;
+            const diff = mentorLevelNum - userLevelNum;
+            if (diff === 1) return 100;
+            if (diff === 2) return 90;
+            return 70;
+        }
+
+        function quickSort(arr, compareFunc) {
+            if (arr.length <= 1) return arr;
+            const pivotIndex = Math.floor(arr.length / 2);
+            const pivot = arr[pivotIndex];
+            const left = [], middle = [], right = [];
+            for (let i = 0; i < arr.length; i++) {
+                const comparison = compareFunc(arr[i], pivot);
+                if (comparison > 0) left.push(arr[i]);
+                else if (comparison < 0) right.push(arr[i]);
+                else middle.push(arr[i]);
+            }
+            return [...quickSort(left, compareFunc), ...middle, ...quickSort(right, compareFunc)];
+        }
+
+        function findMentors() {
+            const userProfile = {
+                experience: document.getElementById('experience').value,
+                field: document.getElementById('field').value,
+                skills: [...userSkills],
+                location: document.getElementById('location').value
+            };
+            if (userProfile.skills.length === 0) {
+                // Alert removed for smoother UX, can proceed with field/exp match
+            }
+            const scoredMentors = mentors.map(mentor => ({
+                ...mentor,
+                compatibilityScore: calculateCompatibilityScore(mentor, userProfile),
+                matchedSkills: mentor.skills.filter(skill => userProfile.skills.map(s => s.toLowerCase()).includes(skill.toLowerCase()))
+            }));
+            const sortedMentors = quickSort(scoredMentors, (a, b) => a.compatibilityScore - b.compatibilityScore);
+            const recommendedMentors = sortedMentors.filter(mentor => mentor.compatibilityScore >= 30);
+            displayResults(recommendedMentors, userProfile);
+        }
+
+        function displayResults(mentorsToDisplay, userProfile) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            if (mentorsToDisplay.length === 0) {
+                resultsDiv.innerHTML = `<div class="no-results"><h3>😕 No mentors found</h3><p>Try adjusting your preferences.</p></div>`;
+                return;
+            }
+            const heading = document.createElement('h2');
+            heading.innerHTML = `🎯 Recommended Mentors (${mentorsToDisplay.length} found)`;
+            resultsDiv.appendChild(heading);
+            mentorsToDisplay.forEach(mentor => {
+                const card = document.createElement('div');
+                card.className = 'mentor-card';
+                const fieldDisplay = mentor.field.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                const locationDisplay = mentor.location.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                card.innerHTML = `
+                    <div class="mentor-header">
+                        <div class="mentor-name">${mentor.name}</div>
+                        <div class="compatibility-score">${mentor.compatibilityScore}% Match</div>
+                    </div>
+                    <div class="mentor-details">
+                        <div class="detail-item"><span class="detail-label">Company:</span> ${mentor.company}</div>
+                        <div class="detail-item"><span class="detail-label">Experience:</span> ${mentor.yearsExperience} yrs (${mentor.experience})</div>
+                        <div class="detail-item"><span class="detail-label">Rating:</span> ⭐ ${mentor.rating}/5</div>
+                        <div class="detail-item"><span class="detail-label">Students:</span> ${mentor.studentsCount}</div>
+                        <div class="detail-item"><span class="detail-label">Field:</span> ${fieldDisplay}</div>
+                        <div class="detail-item"><span class="detail-label">Location:</span> ${locationDisplay}</div>
+                    </div>
+                    <div><strong class="detail-label">Skills:</strong>
+                        <div class="mentor-skills">
+                            ${mentor.skills.map(skill => `<span class="mentor-skill ${mentor.matchedSkills.map(s=>s.toLowerCase()).includes(skill.toLowerCase()) ? 'matched-skill' : ''}">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-method">📧 <a href="mailto:${mentor.email}">${mentor.email}</a></div>
+                        <div class="contact-method">💼 <a href="https://${mentor.linkedin}" target="_blank" rel="noopener noreferrer">${mentor.linkedin}</a></div>
+                        <a href="https://${mentor.calendly}" class="contact-btn" target="_blank" rel="noopener noreferrer">📅 Schedule</a>
+                    </div>`;
+                resultsDiv.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const skillInput = document.getElementById('skillInput');
+            skillInput.addEventListener('keypress', function(e) {
+                if (e.key ==='Enter') {
+                    e.preventDefault();
+                    addSkill();
+                }
+            });
+            initializeMentorNetwork();
+        });
+    </script>
+</body>
+</html>
